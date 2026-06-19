@@ -3,23 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Threads 內容經營中心</title>
+<title>社群內容中心 · AI 飲食教練</title>
 <style>
 :root{
   --bg:#F5F4F0;--card:#FFF;--border:#E4E2DA;--text:#1C1C1A;
   --muted:#7A7872;--hint:#B2B0A8;--accent:#1A6B3C;--abg:#EAF4EE;
   --atxt:#0F3D22;--ybg:#FFFBEB;--ytxt:#78350F;--bbg:#EFF6FF;--btxt:#1E3A5F;
-  --r:12px;--rs:8px;
+  --r:12px;--rs:8px;--rx:6px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;display:flex;height:100vh;overflow:hidden}
 
 /* Sidebar */
-.sb{width:210px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sb{width:200px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
 .sb-logo{padding:16px 16px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
 .sb-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sb-t{font-size:13px;font-weight:700;line-height:1.2}
-.sb-s{font-size:10px;color:var(--muted)}
 .sb-sec{padding:14px 14px 4px;font-size:10px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.07em}
 .nav{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:1px 8px;border-radius:var(--rs);cursor:pointer;font-size:13px;color:var(--muted);background:none;border:none;width:calc(100% - 16px);text-align:left;transition:all .12s;font-family:inherit}
 .nav:hover{background:var(--bg);color:var(--text)}
@@ -33,21 +31,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC'
 .kbar input{flex:1;border:1px solid #E0C040;border-radius:6px;padding:5px 9px;font-size:12px;font-family:inherit;background:#fff}
 .kbar input:focus{outline:none;border-color:#B8920A}
 .kbtn{padding:5px 11px;border-radius:6px;border:1px solid #B8920A;background:#FFF3CC;color:var(--ytxt);cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;white-space:nowrap}
-.kbtn:hover{background:#FFE878}
 
 /* Main */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .pg{flex:1;overflow-y:auto;padding:22px 26px 60px}
 
-/* Card */
+/* Cards */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px 18px;margin-bottom:12px}
 .ct{font-size:10px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
 .ph{font-size:20px;font-weight:700;margin-bottom:3px}
 .ps{font-size:13px;color:var(--muted);margin-bottom:18px}
-
-/* Grid */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+/* Inputs */
+textarea,input[type=text],select{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-size:13px;color:var(--text);background:var(--card);font-family:inherit;line-height:1.6;transition:border-color .14s}
+textarea{resize:vertical}
+textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var(--accent)}
 
 /* Chips */
 .chip{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:12px;color:var(--muted);background:none;transition:all .12s;font-family:inherit;white-space:nowrap}
@@ -60,10 +61,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC'
 .cb strong{font-size:13px;font-weight:600;color:inherit;display:block}
 .cb small{font-size:11px;opacity:.7}
 
-/* Inputs */
-textarea,input[type=text],select{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-size:13px;color:var(--text);background:var(--card);font-family:inherit;line-height:1.6;transition:border-color .14s}
-textarea{resize:vertical}
-textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
+/* Tone buttons - VitalWriter style */
+.tone-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tone-btn{padding:13px 16px;border-radius:var(--rs);border:1.5px solid var(--border);cursor:pointer;font-size:14px;font-weight:500;background:none;transition:all .15s;text-align:center;font-family:inherit;color:var(--muted)}
+.tone-btn:hover{border-color:var(--accent);color:var(--text);background:var(--abg)}
+.tone-btn.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+
+/* Platform tabs */
+.plat-tabs{display:flex;gap:6px;margin-bottom:14px}
+.ptab{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);background:none;transition:all .12s;font-family:inherit}
+.ptab:hover{border-color:var(--accent);color:var(--text)}
+.ptab.on{border-color:var(--accent);background:var(--abg);color:var(--atxt)}
 
 /* Buttons */
 .btn{padding:8px 15px;border-radius:var(--rs);border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:13px;color:var(--muted);font-family:inherit;font-weight:500;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
@@ -77,16 +85,17 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
 .full{width:100%;justify-content:center;padding:12px;font-size:14px;font-weight:600}
 
 /* Output */
-.outbox{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--text);min-height:60px;font-family:inherit}
+.outbox{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--text);min-height:80px;font-family:inherit}
 .outhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .badge{font-size:11px;padding:2px 9px;border-radius:10px;border:1px solid var(--border);color:var(--muted);background:var(--card)}
 
-/* Drop zone */
-.dz{border:1.5px dashed var(--border);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .14s;margin-bottom:9px}
-.dz:hover,.dz.has{border-color:var(--accent);background:var(--abg)}
-#pimg{max-width:100%;max-height:160px;border-radius:var(--rs);margin:7px auto 0;border:1px solid var(--border);display:none}
+/* URL input row */
+.url-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.url-row input{flex:1}
+.rm-btn{padding:6px 10px;border-radius:var(--rs);border:1px solid var(--border);background:none;cursor:pointer;color:var(--muted);font-size:13px;flex-shrink:0}
+.rm-btn:hover{border-color:#ef4444;color:#ef4444}
 
-/* Info box */
+/* Info */
 .info{border-radius:var(--rs);padding:9px 12px;font-size:12px;line-height:1.6;margin-top:8px}
 .ig{background:var(--abg);color:var(--atxt)}
 .iy{background:var(--ybg);color:var(--ytxt)}
@@ -105,40 +114,49 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
 .ctp{font-size:10px;line-height:1.4;color:var(--text)}
 .ctag{font-size:9px;padding:1px 5px;border-radius:3px;margin-top:3px;display:inline-block}
 
-/* Cards for templates/history */
+/* History / Template cards */
 .tc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;cursor:pointer;transition:border-color .12s}
 .tc:hover{border-color:var(--accent)}
 .tcm{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
 .tcb{font-size:13px;color:var(--muted);line-height:1.55;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
 
-/* Topic cards */
-.topc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .12s}
-.topc:hover{border-color:var(--accent);transform:translateY(-1px)}
+/* Range slider */
+.slider-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.slider-row input[type=range]{flex:1}
+.slider-val{font-size:13px;font-weight:600;color:var(--text);min-width:36px;text-align:right}
+
+/* Word count badge */
+.wc-bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Spinner */
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 
 /* Agent */
 .astep{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px 17px;margin-bottom:12px}
 .asthd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .asnum{width:24px;height:24px;border-radius:50%;background:var(--abg);color:var(--atxt);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .astitle{font-size:14px;font-weight:600}
-.aout{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;font-size:13px;line-height:1.75;white-space:pre-wrap;min-height:44px;color:var(--text);font-family:inherit;margin-top:8px;display:none}
 .pwrap{background:var(--bg);border-radius:10px;height:7px;margin:8px 0 4px;overflow:hidden;display:none}
 .pbar{height:100%;background:var(--accent);border-radius:10px;transition:width .3s ease;width:0}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.si{background:var(--bg);border-radius:var(--rs);padding:10px 12px;border:1px solid var(--border)}
-.sday{font-size:11px;font-weight:700;color:var(--hint);margin-bottom:3px}
-.stopic{font-size:13px;color:var(--text);font-weight:500}
-.stype{font-size:11px;color:var(--muted)}
-
-/* Spinner */
-.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
 
 /* Toast */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 
-@media(max-width:680px){.sb{display:none}.g2,.g4{grid-template-columns:1fr}.pg{padding:14px}}
+/* Topic cards */
+.topc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .12s}
+.topc:hover{border-color:var(--accent);transform:translateY(-1px)}
+
+/* Drop zone */
+.dz{border:1.5px dashed var(--border);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .14s;margin-bottom:9px}
+.dz:hover,.dz.has{border-color:var(--accent);background:var(--abg)}
+#pimg{max-width:100%;max-height:160px;border-radius:var(--rs);margin:7px auto 0;border:1px solid var(--border);display:none}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+@media(max-width:680px){.sb{display:none}.g2,.g3,.g4{grid-template-columns:1fr}.pg{padding:14px}}
 </style>
 </head>
 <body>
@@ -146,47 +164,70 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
 <!-- SIDEBAR -->
 <nav class="sb">
   <div class="sb-logo">
-    <div class="sb-mark">T</div>
-    <div><div class="sb-t">Threads 內容中心</div><div class="sb-s">AI 飲食教練</div></div>
+    <div class="sb-mark">AI</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;line-height:1.2">社群內容中心</div>
+      <div style="font-size:10px;color:var(--muted)">AI 飲食教練</div>
+    </div>
   </div>
   <div class="sb-sec">工具</div>
   <button class="nav on" onclick="go('gen')">✦ &nbsp;貼文產生器</button>
-  <button class="nav" onclick="go('agent')">⚡ &nbsp;每日自動產出 Agent</button>
-  <button class="nav" onclick="go('cal')">▦ &nbsp;週內容行事曆</button>
+  <button class="nav" onclick="go('agent')">⚡ &nbsp;每日 Agent</button>
+  <button class="nav" onclick="go('cal')">▦ &nbsp;週行事曆</button>
   <button class="nav" onclick="go('topics')">◈ &nbsp;主題庫</button>
   <button class="nav" onclick="go('tpl')">⊞ &nbsp;範本庫</button>
   <div class="sb-sec">紀錄</div>
   <button class="nav" onclick="go('hist')">◷ &nbsp;發文紀錄</button>
   <div class="sb-foot">
     <div class="sr"><span>累計生成</span><span class="sn" id="st0">0</span></div>
-    <div class="sr"><span>→ 自己頁面</span><span class="sn" id="st1">0</span></div>
-    <div class="sr"><span>→ 版主頁面</span><span class="sn" id="st2">0</span></div>
-    <div class="sr"><span>→ KOL</span><span class="sn" id="st3">0</span></div>
+    <div class="sr"><span>Threads</span><span class="sn" id="st1">0</span></div>
+    <div class="sr"><span>IG</span><span class="sn" id="st2">0</span></div>
+    <div class="sr"><span>FB</span><span class="sn" id="st3">0</span></div>
   </div>
 </nav>
 
-<!-- MAIN -->
 <div class="main">
-
-<!-- API Key Bar -->
+<!-- Key Bar -->
 <div class="kbar" id="kbar">
   <span>🔑</span>
-  <span style="white-space:nowrap">Anthropic API Key：</span>
+  <span style="white-space:nowrap;font-size:12px">API Key：</span>
   <input type="password" id="kip" placeholder="sk-ant-api03-...">
   <button class="kbtn" onclick="saveKey()">儲存</button>
-  <a href="https://console.anthropic.com/settings/keys" target="_blank" style="font-size:11px;color:var(--ytxt);white-space:nowrap;text-decoration:underline">取得 Key →</a>
-  <button class="kbtn" onclick="document.getElementById('kbar').style.display='none'" style="background:transparent;border:none;font-size:16px;padding:0 4px;cursor:pointer;color:var(--ytxt)">×</button>
+  <a href="https://console.anthropic.com/settings/keys" target="_blank" style="font-size:11px;color:var(--ytxt);text-decoration:underline;white-space:nowrap">取得 Key →</a>
+  <button onclick="document.getElementById('kbar').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--ytxt);font-size:16px;padding:0 4px">×</button>
 </div>
 
-<!-- ===== PAGE: GENERATOR ===== -->
+<!-- ===== GENERATOR ===== -->
 <div class="pg" id="p-gen">
   <div class="ph">貼文產生器</div>
-  <div class="ps">選主題類型 → 選風格 → 生成完整 Threads 貼文</div>
+  <div class="ps">貼上網址或輸入主題 → 選平台與口氣 → 一鍵生成</div>
 
+  <!-- Platform tabs -->
+  <div class="plat-tabs">
+    <button class="ptab on" onclick="selPlat(this,'threads')">Threads</button>
+    <button class="ptab" onclick="selPlat(this,'ig')">Instagram</button>
+    <button class="ptab" onclick="selPlat(this,'fb')">Facebook</button>
+    <button class="ptab" onclick="selPlat(this,'all')">三平台同步</button>
+  </div>
+
+  <!-- Reference URLs -->
   <div class="card">
-    <div class="ct">主題類型</div>
+    <div class="ct">參考網址（可選）— 貼上文章連結，AI 自動分析內容並重製</div>
+    <div id="url-list">
+      <div class="url-row">
+        <input type="text" placeholder="貼上專業文章網址 https://..." class="url-input">
+        <button class="rm-btn" onclick="rmUrl(this)">✕</button>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:6px;font-size:12px" onclick="addUrl()">+ 新增網址</button>
+    <div class="info ib" style="margin-top:10px">💡 貼上網址後 AI 會擷取文章重點，根據你選的角度重新包裝成貼文，不需要再輸入主題</div>
+  </div>
+
+  <!-- Topic type -->
+  <div class="card">
+    <div class="ct">主題類型（無網址時使用）</div>
     <div class="g4" id="ttg">
-      <button class="cb on" onclick="stt(this,'food')"><strong>🍱 食物分析</strong><small>照片或描述料理</small></button>
+      <button class="cb on" onclick="stt(this,'food')"><strong>🍱 食物分析</strong><small>上傳照片或描述</small></button>
       <button class="cb" onclick="stt(this,'myth')"><strong>💡 飲食迷思</strong><small>破解常見誤解</small></button>
       <button class="cb" onclick="stt(this,'habit')"><strong>📈 習慣養成</strong><small>行為改變技巧</small></button>
       <button class="cb" onclick="stt(this,'tool')"><strong>🤖 工具展示</strong><small>AI 教練功能</small></button>
@@ -197,16 +238,16 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
     </div>
   </div>
 
+  <!-- Dynamic input -->
   <div class="card" id="dyn">
     <div id="if"><div class="ct">食物資訊</div>
       <div class="dz" id="dz" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault()" ondrop="onDrop(event)">
         <div style="font-size:22px">📷</div>
         <div style="font-size:13px;color:var(--muted);margin-top:4px">點擊 / 拖曳 / Ctrl+V 貼上截圖</div>
-        <div style="font-size:11px;color:var(--hint);margin-top:2px">直接貼上 Threads / IG 截圖</div>
         <input type="file" id="fi" accept="image/*" style="display:none" onchange="onImg(event)">
       </div>
       <img id="pimg" alt="">
-      <textarea id="ftxt" rows="2" placeholder="或文字描述：例如「滷肉飯便當，有炒青菜和荷包蛋」" style="margin-top:8px"></textarea>
+      <textarea id="ftxt" rows="2" placeholder="或文字描述料理..." style="margin-top:8px"></textarea>
     </div>
     <div id="im" style="display:none"><div class="ct">飲食迷思</div>
       <div class="chips" id="mc" style="margin-bottom:8px">
@@ -214,7 +255,6 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
         <button class="chip" onclick="sc(this,'mc')">不吃澱粉減脂</button>
         <button class="chip" onclick="sc(this,'mc')">晚上不能吃東西</button>
         <button class="chip" onclick="sc(this,'mc')">吃沙拉最健康</button>
-        <button class="chip" onclick="sc(this,'mc')">喝水會胖</button>
       </div>
       <textarea id="mtxt" rows="2" placeholder="或自訂迷思..."></textarea>
     </div>
@@ -223,7 +263,6 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
         <button class="chip on" onclick="sc(this,'hc')">記錄飲食的好處</button>
         <button class="chip" onclick="sc(this,'hc')">外食族怎麼控熱量</button>
         <button class="chip" onclick="sc(this,'hc')">如何建立早餐習慣</button>
-        <button class="chip" onclick="sc(this,'hc')">減少無意識零食</button>
       </div>
       <textarea id="htxt" rows="2" placeholder="或自訂..."></textarea>
     </div>
@@ -241,7 +280,6 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
         <button class="chip on" onclick="sc(this,'qc')">你最難戒的食物</button>
         <button class="chip" onclick="sc(this,'qc')">外食最大困擾</button>
         <button class="chip" onclick="sc(this,'qc')">你覺得自己吃得健康嗎</button>
-        <button class="chip" onclick="sc(this,'qc')">一天喝多少水</button>
       </div>
       <textarea id="qtxt" rows="2" placeholder="或自訂..."></textarea>
     </div>
@@ -253,7 +291,6 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
         <button class="chip on" onclick="sc(this,'scc')">蛋白質與飽足感</button>
         <button class="chip" onclick="sc(this,'scc')">升糖指數 GI 值</button>
         <button class="chip" onclick="sc(this,'scc')">睡眠與食慾荷爾蒙</button>
-        <button class="chip" onclick="sc(this,'scc')">間歇性斷食</button>
       </div>
       <textarea id="sctxt" rows="2" placeholder="或自訂..."></textarea>
     </div>
@@ -262,118 +299,150 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
         <button class="chip on" onclick="sc(this,'sec')">開學季（9月）</button>
         <button class="chip" onclick="sc(this,'sec')">中秋烤肉</button>
         <button class="chip" onclick="sc(this,'sec')">夏天怕胖</button>
-        <button class="chip" onclick="sc(this,'sec')">農曆新年</button>
       </div>
       <textarea id="setxt" rows="2" placeholder="或自訂..."></textarea>
     </div>
   </div>
 
-  <div class="g2">
-    <div class="card"><div class="ct">風格</div>
-      <div style="display:flex;flex-direction:column;gap:6px" id="sg">
-        <button class="cb on" onclick="scb(this,'sg','hook')"><strong>鉤子開場</strong><small>開頭衝擊，逼人繼續讀</small></button>
-        <button class="cb" onclick="scb(this,'sg','list')"><strong>條列清單</strong><small>乾貨要點，容易收藏</small></button>
-        <button class="cb" onclick="scb(this,'sg','story')"><strong>故事共鳴</strong><small>情感連結，帶動留言</small></button>
-        <button class="cb" onclick="scb(this,'sg','contrast')"><strong>對比反差</strong><small>你以為 vs 實際上</small></button>
-      </div>
-    </div>
-    <div class="card"><div class="ct">發文目標</div>
-      <div style="display:flex;flex-direction:column;gap:6px" id="tg">
-        <button class="cb on" onclick="scb(this,'tg','own')"><strong>自己的頁面</strong><small>直接帶 AI 教練 CTA</small></button>
-        <button class="cb" onclick="scb(this,'tg','vendor')"><strong>便當 / 美食版主</strong><small>先讚美，再低調帶入</small></button>
-        <button class="cb" onclick="scb(this,'tg','kol')"><strong>合作 KOL</strong><small>專業互動語氣</small></button>
-      </div>
+  <!-- Brief context -->
+  <div class="card">
+    <div class="ct">補充說明 / 想強調的重點（可選）</div>
+    <textarea id="brief" rows="2" placeholder="例：想強調這款 AI 教練不需要下載 App，直接線上使用，適合忙碌上班族..."></textarea>
+  </div>
+
+  <!-- Writing tone -->
+  <div class="card">
+    <div class="ct">說話口氣</div>
+    <div class="tone-grid" id="tone-grid">
+      <button class="tone-btn on" onclick="selTone(this,'uncle')">經驗大叔</button>
+      <button class="tone-btn" onclick="selTone(this,'energetic')">熱情活力</button>
+      <button class="tone-btn" onclick="selTone(this,'edu')">深度教育</button>
+      <button class="tone-btn" onclick="selTone(this,'humor')">幽默風趣</button>
     </div>
   </div>
 
-  <div class="info ig" id="t-own">💡 建議時間：週一到五 12:00–13:00 或晚上 20:00–22:00</div>
-  <div class="info iy" id="t-vendor" style="display:none">⚡ 版主頁面：對方發文 30 分鐘內留言，先按讚再留言效果最好</div>
-  <div class="info ib" id="t-kol" style="display:none">🤝 KOL 頁面：像兩個帳號在交流，展現飲食知識，順帶提到工具</div>
-
-  <button class="btn p full" id="gbtn" style="margin-top:14px" onclick="genPost(false)">✦ &nbsp;生成 Threads 貼文</button>
-
-  <div id="ow" style="display:none;margin-top:14px">
-    <div class="outhd">
-      <span style="font-size:10px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.05em">生成結果</span>
-      <span class="badge" id="cb">0 字</span>
+  <!-- Writing rules & word count -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="ct" style="margin-bottom:0">寫作規則（AI 必須遵守）</div>
+      <button class="btn" style="font-size:11px;padding:4px 10px" onclick="saveRules()">儲存規則</button>
     </div>
-    <div class="outbox" id="otxt"></div>
-    <div class="brow">
-      <button class="btn g" onclick="cpOut()">⧉ 複製貼文</button>
-      <button class="btn" onclick="genPost(true)">↻ 換個角度</button>
-      <button class="btn" onclick="savePost()">↓ 存入紀錄</button>
+    <textarea id="rules-txt" rows="5" placeholder="例：&#10;1. 標題控制在 22–27 個字&#10;2. 開頭第一句必須有數字或衝擊性陳述&#10;3. 每段不超過 3 行&#10;4. 結尾必須有明確的 CTA&#10;5. 不使用過度推銷的用語"></textarea>
+    <div class="slider-row" style="margin-top:12px">
+      <span style="font-size:12px;color:var(--muted);white-space:nowrap">字數上限</span>
+      <input type="range" id="maxwords" min="50" max="500" step="10" value="200" oninput="document.getElementById('mw-val').textContent=this.value+'字'">
+      <span class="slider-val" id="mw-val">200字</span>
+    </div>
+    <div style="font-size:11px;color:var(--hint);margin-top:4px">Threads ≤ 200字 ／ IG ≤ 300字 ／ FB ≤ 400字（建議）</div>
+  </div>
+
+  <!-- Target (for own/vendor/kol) - only show for Threads -->
+  <div class="card" id="target-card">
+    <div class="ct">發文目標</div>
+    <div style="display:flex;flex-direction:column;gap:6px" id="tg">
+      <button class="cb on" onclick="scb(this,'tg','own')"><strong>自己的頁面</strong><small>直接帶 AI 教練 CTA</small></button>
+      <button class="cb" onclick="scb(this,'tg','vendor')"><strong>便當 / 美食版主留言</strong><small>先讚美，再低調帶入</small></button>
+      <button class="cb" onclick="scb(this,'tg','kol')"><strong>合作 KOL 頁面</strong><small>專業互動語氣</small></button>
+    </div>
+  </div>
+
+  <button class="btn p full" id="gbtn" style="margin-top:4px" onclick="genPost(false)">✦ &nbsp;生成貼文</button>
+
+  <!-- Output -->
+  <div id="ow" style="display:none;margin-top:14px">
+    <div id="single-out">
+      <div class="outhd">
+        <span style="font-size:10px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.05em" id="out-plat-label">Threads 貼文</span>
+        <span class="badge" id="cb">0 字</span>
+      </div>
+      <div class="outbox" id="otxt"></div>
+      <div class="brow">
+        <button class="btn g" onclick="cpOut()">⧉ 複製</button>
+        <button class="btn" onclick="genPost(true)">↻ 換個角度</button>
+        <button class="btn" onclick="savePost()">↓ 存入紀錄</button>
+      </div>
+    </div>
+    <!-- Three-platform output -->
+    <div id="triple-out" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div id="out-threads" class="card" style="margin-bottom:0">
+          <div class="outhd"><span style="font-size:12px;font-weight:600;color:var(--text)">Threads</span><span class="badge" id="cb-t">0 字</span></div>
+          <div class="outbox" id="otxt-t" style="min-height:60px"></div>
+          <div class="brow"><button class="btn g" onclick="cp(document.getElementById('otxt-t').textContent,'Threads 已複製 ✓')">⧉ 複製</button></div>
+        </div>
+        <div id="out-ig" class="card" style="margin-bottom:0">
+          <div class="outhd"><span style="font-size:12px;font-weight:600;color:var(--text)">Instagram</span><span class="badge" id="cb-i">0 字</span></div>
+          <div class="outbox" id="otxt-i" style="min-height:60px"></div>
+          <div class="brow"><button class="btn g" onclick="cp(document.getElementById('otxt-i').textContent,'IG 已複製 ✓')">⧉ 複製</button></div>
+        </div>
+        <div id="out-fb" class="card" style="margin-bottom:0">
+          <div class="outhd"><span style="font-size:12px;font-weight:600;color:var(--text)">Facebook</span><span class="badge" id="cb-f">0 字</span></div>
+          <div class="outbox" id="otxt-f" style="min-height:60px"></div>
+          <div class="brow"><button class="btn g" onclick="cp(document.getElementById('otxt-f').textContent,'FB 已複製 ✓')">⧉ 複製</button><button class="btn" onclick="saveAllPosts()">↓ 全部存入紀錄</button></div>
+        </div>
+      </div>
     </div>
     <div class="info iy" id="otip" style="margin-top:8px"></div>
   </div>
 </div>
 
-<!-- ===== PAGE: AGENT ===== -->
+<!-- ===== AGENT ===== -->
 <div class="pg" id="p-agent" style="display:none">
   <div class="ph">每日自動產出 Agent</div>
-  <div class="ps">設定每天的發文主題 → 一鍵生成整週貼文，全部自動存入紀錄</div>
+  <div class="ps">設定週排程 → 一鍵生成全週貼文，自動存入紀錄</div>
 
-  <!-- Step 1: Brand -->
   <div class="astep">
-    <div class="asthd"><div class="asnum">1</div><div class="astitle">品牌資訊（一次設定，會記住）</div></div>
+    <div class="asthd"><div class="asnum">1</div><div class="astitle">品牌資訊</div></div>
     <div class="g2">
-      <div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">AI 教練的主要功能</div>
-        <textarea id="bf" rows="3" placeholder="例：上傳食物照片分析熱量，生成個人化菜單">可上傳食物照片分析熱量和營養素，生成個人化飲食計畫，追蹤每日蛋白質攝取量</textarea>
+      <div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">AI 教練主要功能</div>
+        <textarea id="bf" rows="3">可上傳食物照片分析熱量和營養素，生成個人化飲食計畫，追蹤每日蛋白質攝取量</textarea>
       </div>
-      <div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">主要目標用戶</div>
-        <textarea id="ba" rows="3" placeholder="例：25–40歲台灣上班族，外食族">25–40歲台灣上班族，外食族，想控制體重但沒時間計算熱量</textarea>
+      <div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">目標用戶</div>
+        <textarea id="ba" rows="3">25–40歲台灣上班族，外食族，想控制體重但沒時間計算熱量</textarea>
       </div>
     </div>
     <button class="btn g" style="margin-top:10px" onclick="saveBrand()">儲存品牌資訊</button>
   </div>
 
-  <!-- Step 2: Editable Schedule -->
   <div class="astep">
     <div class="asthd">
-      <div class="asnum">2</div>
-      <div class="astitle">編輯週排程</div>
-      <button class="btn" style="margin-left:auto;font-size:11px;padding:5px 10px" onclick="resetSched()">↺ 還原預設</button>
+      <div class="asnum">2</div><div class="astitle">編輯週排程</div>
+      <button class="btn" style="margin-left:auto;font-size:11px;padding:4px 10px" onclick="resetSched()">↺ 還原預設</button>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">每天都可以自訂主題類型、風格、發文目標，也可以關閉不想發的那天</div>
     <div id="sched-editor"></div>
   </div>
 
-  <!-- Step 3: Mode & Run -->
   <div class="astep">
-    <div class="asthd"><div class="asnum">3</div><div class="astitle">選擇模式 → 執行</div></div>
+    <div class="asthd"><div class="asnum">3</div><div class="astitle">執行模式</div></div>
     <div class="chips" id="amc" style="margin-bottom:12px">
-      <button class="chip on" onclick="sc(this,'amc')">🗓 整週排程（全部啟用的天）</button>
+      <button class="chip on" onclick="sc(this,'amc')">🗓 整週排程</button>
       <button class="chip" onclick="sc(this,'amc')">📅 今日單篇</button>
       <button class="chip" onclick="sc(this,'amc')">💬 版主留言批次</button>
     </div>
-    <div id="vfi" style="display:none;margin-bottom:12px">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">描述要留言的料理（每行一個，最多5個）</div>
-      <textarea id="vft" rows="4" placeholder="滷肉飯便當&#10;韓式炸雞&#10;生菜沙拉&#10;雞腿飯&#10;壽司"></textarea>
+    <div id="vfi" style="display:none;margin-bottom:10px">
+      <textarea id="vft" rows="4" placeholder="每行一道料理：&#10;滷肉飯便當&#10;韓式炸雞&#10;生菜沙拉"></textarea>
     </div>
-    <div class="info ib" style="margin-bottom:12px">⚡ Agent 會依序生成每篇貼文，完成後自動存入「發文紀錄」</div>
     <button class="btn p full" id="abtn" onclick="runAgent()">⚡ &nbsp;開始自動生成</button>
     <div class="pwrap" id="pw"><div class="pbar" id="pb"></div></div>
     <div style="font-size:12px;color:var(--muted);margin-top:5px;min-height:16px" id="ast"></div>
   </div>
 
-  <!-- Results -->
   <div id="ares" style="display:none">
     <div class="astep">
-      <div class="asthd"><div class="asnum" style="background:var(--abg);color:var(--atxt)">✓</div><div class="astitle">生成完成！所有貼文已存入紀錄</div></div>
-      <div id="ares-list" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+      <div class="asthd"><div class="asnum" style="background:var(--abg);color:var(--atxt)">✓</div><div class="astitle">完成！已存入紀錄</div></div>
+      <div id="ares-list" style="display:flex;flex-direction:column;gap:8px"></div>
       <div class="brow" style="margin-top:12px">
         <button class="btn g" onclick="go('hist')">查看所有貼文 →</button>
-        <button class="btn" onclick="cpAll()">⧉ 複製全部貼文</button>
+        <button class="btn" onclick="cpAll()">⧉ 複製全部</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== PAGE: CALENDAR ===== -->
+<!-- ===== CALENDAR ===== -->
 <div class="pg" id="p-cal" style="display:none">
   <div class="ph">週內容行事曆</div>
-  <div class="ps">規劃每週發文主題，點格子可設定或清除</div>
+  <div class="ps">點格子設定主題，一鍵套用建議排程</div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <span style="font-size:14px;font-weight:600" id="wlb"></span>
@@ -393,7 +462,7 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<!-- ===== PAGE: TOPICS ===== -->
+<!-- ===== TOPICS ===== -->
 <div class="pg" id="p-topics" style="display:none">
   <div class="ph">主題庫</div>
   <div class="ps">8 大內容支柱，點擊直接跳到產生器</div>
@@ -401,10 +470,10 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
   <div class="card" style="margin-top:8px"><div class="ct">每週頻率建議</div><div id="flist"></div></div>
 </div>
 
-<!-- ===== PAGE: TEMPLATES ===== -->
+<!-- ===== TEMPLATES ===== -->
 <div class="pg" id="p-tpl" style="display:none">
   <div class="ph">範本庫</div>
-  <div class="ps">立即可用的貼文範本，點複製直接貼到 Threads</div>
+  <div class="ps">立即可用的貼文範本</div>
   <div class="chips" id="tf" style="margin-bottom:12px">
     <button class="chip on" onclick="ftpl(this,'all')">全部</button>
     <button class="chip" onclick="ftpl(this,'food')">食物</button>
@@ -417,7 +486,7 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
   <div id="tlist"></div>
 </div>
 
-<!-- ===== PAGE: HISTORY ===== -->
+<!-- ===== HISTORY ===== -->
 <div class="pg" id="p-hist" style="display:none">
   <div class="ph">發文紀錄</div>
   <div class="ps">點擊任一貼文直接複製</div>
@@ -432,7 +501,6 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
 <div class="toast" id="toast"></div>
 
 <script>
-// ─────────── DATA ───────────
 const TOPICS={
   food:{icon:'🍱',name:'食物分析',desc:'針對便當/美食版主留言最有效',col:'#EAF4EE',tc:'#0F3D22',freq:3},
   myth:{icon:'💡',name:'飲食迷思',desc:'轉發率最高的內容類型',col:'#FEF9C3',tc:'#713F12',freq:1},
@@ -444,271 +512,32 @@ const TOPICS={
   season:{icon:'📅',name:'節慶時事',desc:'借勢觸及遠高於普通貼文',col:'#FFF7ED',tc:'#7C2D12',freq:0.5},
 };
 const WK=[
-  {dow:1,type:'food',target:'vendor',label:'食物分析 → 版主留言',tip:'找便當/美食版主截圖留言'},
+  {dow:1,type:'food',target:'vendor',label:'食物分析→版主留言',tip:'找便當/美食版主截圖留言'},
   {dow:2,type:'myth',target:'own',label:'飲食迷思破解',tip:'乾貨知識容易被轉發'},
   {dow:3,type:'qa',target:'own',label:'互動問答帖',tip:'每個留言回覆附 AI 教練連結'},
-  {dow:4,type:'food',target:'vendor',label:'食物分析 → 版主留言',tip:'第二波版主留言'},
+  {dow:4,type:'food',target:'vendor',label:'食物分析→版主留言',tip:'第二波版主留言'},
   {dow:5,type:'tool',target:'own',label:'工具功能展示',tip:'截圖工具介面搭配說明'},
   {dow:6,type:'case',target:'own',label:'使用者故事',tip:'匿名改寫真實用戶回饋'},
-  {dow:0,rest:true,label:'休息 / 數據覆盤',tip:'分析本週哪篇觸及最高'},
+  {dow:0,rest:true,label:'休息 / 覆盤',tip:'分析本週哪篇觸及最高'},
 ];
 const TMPLS=[
-  {id:1,type:'food',target:'own',title:'滷肉飯熱量揭密',body:`「滷肉飯是健康便當」——很多人每天說的謊。
-
-但真相：
-・熱量：750–920 kcal（一天需求的 40–50%）
-・脂肪：28–38g（帶皮五花肉脂肪極高）
-・鈉：1,400–1,800mg（一天建議量的 60–75%）
-
-不是要你不吃，是要你知道你在吃什麼。
-
-→ 把今天的便當丟給 AI 飲食教練，3秒告訴你真實營養
-
-#飲食控制 #熱量計算 #便當日記 #健康飲食`},
-  {id:2,type:'food',target:'vendor',title:'版主留言（便當）',body:`這個便當好用心，看起來超有食慾！
-
-幫大家估算這樣搭配的營養：
-蛋白質約 28–35g，熱量估計 650–750 kcal，相當均衡 ✨
-
-最近在用 AI 飲食教練分析外食，才知道怎麼估算各種便當的營養，很實用！
-
-感謝分享這麼精緻的便當 🙏
-
-#便當日記 #手作便當 #健康飲食`},
-  {id:3,type:'myth',target:'own',title:'少吃就會瘦迷思',body:`「少吃就會瘦」——台灣最普遍的飲食謊言。
-
-真相：
-→ 吃太少（<1200kcal）身體啟動飢餓模式
-→ 基礎代謝下降 15–20%
-→ 掉的是肌肉不是脂肪
-
-正確做法：
-✓ 計算你的 TDEE
-✓ 只減少 300–500 kcal
-✓ 維持蛋白質在體重 × 1.6g
-
-你知道自己 TDEE 是多少嗎？
-→ AI 飲食教練 3 秒幫你算
-
-#飲食迷思 #減脂知識 #健康飲食`},
-  {id:4,type:'qa',target:'own',title:'互動問答帖',body:`留言告訴我：你最大的飲食困擾是什麼？
-
-可以是：
-・「為什麼吃很少還是不瘦？」
-・「外食族怎麼控熱量？」
-・「減脂期蛋白質怎麼補？」
-
-我會一一回覆，並告訴你 AI 飲食教練怎麼幫你解決 👇`},
-  {id:5,type:'tool',target:'own',title:'AI教練功能展示',body:`以前記錄飲食：打開 app → 搜尋食物 → 輸入份量 → 5 分鐘過去
-
-現在：拍一張照 → 3 秒完成分析
-
-還會告訴你：
-→ 這餐熱量、蛋白質、脂肪、碳水
-→ 今天還需要補充什麼
-→ 你的飲食模式怎麼調整
-
-飲食管理從來不是意志力問題，是工具問題。
-
-#AI飲食 #飲食追蹤 #健康科技`},
-  {id:6,type:'season',target:'own',title:'開學季借勢',body:`開學了——台灣最容易暴食的月份。
-
-原因：
-・開學壓力 → 渴望甜食碳水
-・外食比例從 40% 跳到 80%
-・睡眠不足 → 飢餓荷爾蒙上升 23%
-
-開學前先把飲食基準線設好，亂了也知道怎麼回來。
-
-→ 9月限定：AI 飲食教練幫你規劃開學季飲食計畫
-
-#開學季 #減脂 #飲食管理`},
-  {id:7,type:'food',target:'vendor',title:'版主留言（健身餐）',body:`這個健身餐的蛋白質搭配看起來很完整！
-
-幫大家參考一下：
-蛋白質估計 35–45g，熱量約 550–650 kcal 💪
-
-我在用 AI 飲食教練追蹤增肌期蛋白質，這種餐點分析超方便！
-
-謝謝你的分享，很有動力 🙏
-
-#健身餐 #增肌 #高蛋白飲食`},
-  {id:8,type:'myth',target:'own',title:'晚上不能吃東西迷思',body:`「晚上吃東西一定會胖」——終結這個謠言。
-
-你以為：夜間代謝慢，熱量自動囤積
-實際上：讓你胖的是一天總熱量超標，不是時間點
-
-但有例外：
-→ 如果晚上吃是因為「壓力」或「無聊」，才真的容易超標
-
-解法不是不吃，是搞清楚你在哪個情況下進食。
-
-→ AI 飲食教練幫你追蹤飲食模式，找出你的真正地雷
-
-#飲食迷思 #減肥知識 #健康飲食`},
+  {id:1,type:'food',target:'own',title:'滷肉飯熱量揭密',body:`「滷肉飯是健康便當」——很多人每天說的謊。\n\n真相：\n・熱量：750–920 kcal（一天需求的 40–50%）\n・脂肪：28–38g（帶皮五花肉脂肪極高）\n・鈉：1,400–1,800mg（一天建議量的 60–75%）\n\n不是要你不吃，是要你知道你在吃什麼。\n\n→ 把今天的便當丟給 AI 飲食教練，3秒告訴你真實營養\n\n#飲食控制 #熱量計算 #便當日記`},
+  {id:2,type:'food',target:'vendor',title:'版主留言（便當）',body:`這個便當好用心，看起來超有食慾！\n\n幫大家估算這樣搭配的營養：\n蛋白質約 28–35g，熱量估計 650–750 kcal ✨\n\n最近在用 AI 飲食教練分析外食，才知道怎麼估算各種便當的營養，很實用！\n\n感謝分享這麼精緻的便當 🙏\n\n#便當日記 #手作便當 #健康飲食`},
+  {id:3,type:'myth',target:'own',title:'少吃就會瘦迷思',body:`「少吃就會瘦」——台灣最普遍的飲食謊言。\n\n真相：\n→ 吃太少（<1200kcal）身體啟動飢餓模式\n→ 基礎代謝下降 15–20%\n→ 掉的是肌肉不是脂肪\n\n正確做法：\n✓ 計算你的 TDEE\n✓ 只減少 300–500 kcal\n✓ 維持蛋白質在體重 × 1.6g\n\n→ AI 飲食教練 3 秒幫你算\n\n#飲食迷思 #減脂知識`},
+  {id:4,type:'qa',target:'own',title:'互動問答帖',body:`留言告訴我：你最大的飲食困擾是什麼？\n\n可以是：\n・「為什麼吃很少還是不瘦？」\n・「外食族怎麼控熱量？」\n・「減脂期蛋白質怎麼補？」\n\n我會一一回覆，並告訴你 AI 飲食教練怎麼幫你解決 👇`},
+  {id:5,type:'tool',target:'own',title:'AI教練功能展示',body:`以前記錄飲食：打開 app → 搜尋食物 → 輸入份量 → 5 分鐘過去\n\n現在：拍一張照 → 3 秒完成分析\n\n還會告訴你：\n→ 這餐熱量、蛋白質、脂肪、碳水\n→ 今天還需要補充什麼\n→ 你的飲食模式怎麼調整\n\n飲食管理從來不是意志力問題，是工具問題。\n\n#AI飲食 #飲食追蹤`},
 ];
-const SDESC={hook:'鉤子開場：第一句讓人停下來，用反直覺陳述或數字衝擊',list:'條列清單：3–5個要點，用箭頭，容易掃讀收藏',story:'故事共鳴：第一人稱，讓人有「說的就是我」的感覺',contrast:'對比反差：「你以為X，實際上Y」製造認知落差'};
-const TDESC={own:'貼在自己 Threads，語氣直接，CTA 明確，目標讓陌生人點進 AI 飲食教練',vendor:'貼在便當或美食版主留言區。先真誠讚美料理1–2句，再提供有價值的營養數字，最後非常自然帶入 AI 飲食教練，版主必須願意保留這則留言',kol:'貼在合作 KOL 頁面，像兩個帳號在飲食主題上的專業交流，順帶提到 AI 飲食教練'};
+const TONES={uncle:'經驗豐富、說話直接務實、像老大哥分享親身經歷，帶點權威感但親切',energetic:'充滿活力、正向積極、用感嘆號和emoji、讓人感覺有衝勁',edu:'深度知識型、引用數據和研究、條理清晰、像專業營養師在教學',humor:'輕鬆幽默、適當自嘲、讓人看了會心一笑但同時吸收到知識'};
+const PLAT_DESC={
+  threads:'Threads 平台：160–200字，短段落，純文字也很強，hashtag 3–5個放最後，開頭要衝擊',
+  ig:'Instagram 平台：200–300字，搭配食物圖片，hashtag 10–15個放最後，內容偏生活風格，加上配圖說明',
+  fb:'Facebook 個人頁面：300–400字，故事感，像跟朋友說話，「昨天...」「最近發現...」開頭，引發留言互動，hashtag 1–3個或不用',
+};
 const TIPS={own:'💡 最佳時間：週一到五 12:00–13:00 或 20:00–22:00',vendor:'⚡ 版主技巧：對方發文 30 分鐘內留言，先按讚再留言效果最好',kol:'🤝 KOL 技巧：可先私訊告知，加強合作關係'};
 const DOW=['日','一','二','三','四','五','六'];
 const TL={own:'自己頁面',vendor:'版主頁面',kol:'KOL頁面'};
 const TC={food:['#EAF4EE','#0F3D22'],myth:['#FEF9C3','#713F12'],tool:['#F3E8FF','#4A1D96'],qa:['#FFF0F0','#7F1D1D'],vendor:['#FFFBEB','#78350F'],season:['#FFF7ED','#7C2D12'],case:['#FDF4FF','#581C87'],science:['#F0FDF4','#14532D'],habit:['#EFF6FF','#1E3A5F']};
-const ATOPICS={food:'分析一道常見台灣外食（便當、小吃或手搖飲），揭露真實熱量和營養素，用具體數字說明',myth:'破解一個台灣人常見的飲食迷思，用具體研究數字說明真相',qa:'設計一個能引發台灣上班族留言互動的飲食問題',tool:'展示 AI 飲食教練的核心功能，用使用前後的對比方式說明',case:'描述一個台灣外食族上班族使用 AI 飲食教練的真實改變故事',science:'把一個重要的營養科學知識用淺顯易懂的方式說明'};
-
-// ─────────── STATE ───────────
-let S={
-  apiKey:localStorage.getItem('ak')||'',
-  tt:'food',style:'hook',target:'own',
-  img64:null,curOut:'',weekOff:0,
-  agentPosts:[],
-  cal:JSON.parse(localStorage.getItem('cal')||'{}'),
-  hist:JSON.parse(localStorage.getItem('hist')||'[]'),
-  stats:JSON.parse(localStorage.getItem('stats')||'{"own":0,"vendor":0,"kol":0,"total":0}'),
-};
-
-// Init
-if(S.apiKey){document.getElementById('kip').value=S.apiKey;document.getElementById('kbar').style.background='#F0FDF4';}
-// Load saved brand
-const _bf=localStorage.getItem('brand_f'); if(_bf)document.getElementById('bf').value=_bf;
-const _ba=localStorage.getItem('brand_a'); if(_ba)document.getElementById('ba').value=_ba;
-updStats();
-document.getElementById('amc').querySelector('.chip').addEventListener('click',()=>{});
-
-// ─────────── KEY ───────────
-function saveKey(){
-  const k=document.getElementById('kip').value.trim();
-  if(!k){toast('請輸入 API Key');return;}
-  S.apiKey=k;localStorage.setItem('ak',k);
-  document.getElementById('kbar').style.background='#F0FDF4';
-  toast('API Key 已儲存 ✓');
-}
-
-// ─────────── NAV ───────────
-function go(n){
-  ['gen','agent','cal','topics','tpl','hist'].forEach(p=>document.getElementById('p-'+p).style.display=p===n?'block':'none');
-  document.querySelectorAll('.nav').forEach((b,i)=>b.classList.toggle('on',['gen','agent','cal','topics','tpl','hist'][i]===n));
-  if(n==='agent')renderSchedEditor();
-  if(n==='cal')renderCal();
-  if(n==='topics')renderTopics();
-  if(n==='tpl')renderTpl('all');
-  if(n==='hist')renderHist();
-}
-
-// ─────────── CHIPS ───────────
-function stt(btn,type){
-  document.querySelectorAll('#ttg .cb').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');S.tt=type;
-  ['f','m','ha','to','qa','ca','sc','se'].forEach((id,i)=>{
-    const keys=['food','myth','habit','tool','qa','case','science','season'];
-    document.getElementById('i'+id).style.display=keys[i]===type?'block':'none';
-  });
-}
-function sc(btn,gid){
-  document.querySelectorAll('#'+gid+' .chip').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  if(gid==='amc'){
-    document.getElementById('vfi').style.display=btn.textContent.includes('版主')?'block':'none';
-  }
-}
-function scb(btn,gid,val){
-  document.querySelectorAll('#'+gid+' .cb').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  if(gid==='sg')S.style=val;
-  if(gid==='tg'){
-    S.target=val;
-    ['own','vendor','kol'].forEach(t=>document.getElementById('t-'+t).style.display=t===val?'block':'none');
-  }
-}
-
-// ─────────── IMAGE ───────────
-function onImg(e){if(e.target.files[0])loadImg(e.target.files[0]);}
-function onDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadImg(f);}
-document.addEventListener('paste',e=>{
-  for(const item of(e.clipboardData?.items||[])){if(item.type.startsWith('image/')){loadImg(item.getAsFile());break;}}
-});
-function loadImg(file){
-  const r=new FileReader();
-  r.onload=ev=>{
-    S.img64=ev.target.result.split(',')[1];
-    const img=document.getElementById('pimg');
-    img.src=ev.target.result;img.style.display='block';
-    const dz=document.getElementById('dz');dz.classList.add('has');
-    dz.querySelector('div:nth-child(2)').textContent='✓ 照片已上傳';
-  };
-  r.readAsDataURL(file);
-}
-
-// ─────────── PROMPT ───────────
-function getContent(){
-  const m={
-    food:()=>document.getElementById('ftxt').value||'（請根據圖片分析料理）',
-    myth:()=>document.getElementById('mtxt').value||(document.querySelector('#mc .chip.on')?.textContent||'少吃就會瘦'),
-    habit:()=>document.getElementById('htxt').value||(document.querySelector('#hc .chip.on')?.textContent||'記錄飲食'),
-    tool:()=>document.getElementById('ttxt').value||(document.querySelector('#tc .chip.on')?.textContent||'飲食照片分析'),
-    qa:()=>document.getElementById('qtxt').value||(document.querySelector('#qc .chip.on')?.textContent||'你最難戒的食物'),
-    case:()=>document.getElementById('catxt').value||'上班族外食族改善飲食的故事',
-    science:()=>document.getElementById('sctxt').value||(document.querySelector('#scc .chip.on')?.textContent||'蛋白質與飽足感'),
-    season:()=>document.getElementById('setxt').value||(document.querySelector('#sec .chip.on')?.textContent||'開學季'),
-  };
-  return m[S.tt]?.();
-}
-function mkPrompt(content,style,target,brand,regen){
-  const re=regen?'\n（請從完全不同角度重寫，換開場和結構）':'';
-  const br=brand?`\n品牌：${brand}`:'';
-  return `你是專業 Threads 文案寫手，幫 AI 飲食教練帳號成長（目標：200→5000用戶）。${br}
-
-主題：${content}
-風格：${SDESC[style]||style}
-目標：${TDESC[target]||target}
-
-要求：繁體中文，160–300字，短段落換行，結尾自然帶入「AI飲食教練」CTA，hashtag 3–5個放最後，只輸出貼文內容${re}`;
-}
-
-// ─────────── API ───────────
-async function callAPI(prompt,img64){
-  if(!S.apiKey)throw new Error('no_key');
-  const msgs=img64
-    ?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img64}},{type:'text',text:prompt}]}]
-    :[{role:'user',content:prompt}];
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,messages:msgs})
-  });
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API 錯誤 '+res.status);}
-  const d=await res.json();
-  return d.content?.[0]?.text||'';
-}
-
-// ─────────── GENERATOR ───────────
-async function genPost(regen){
-  if(!S.apiKey){toast('請先輸入 API Key（頂部黃色列）');return;}
-  const content=getContent();
-  if(!content&&!S.img64){toast('請描述主題或上傳圖片');return;}
-  const btn=document.getElementById('gbtn');
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div> 生成中...';
-  document.getElementById('ow').style.display='block';
-  document.getElementById('otxt').textContent='分析中...';
-  try{
-    const txt=await callAPI(mkPrompt(content||'分析圖片料理',S.style,S.target,'',regen),S.img64);
-    S.curOut=txt;
-    document.getElementById('otxt').textContent=txt;
-    document.getElementById('cb').textContent=txt.length+' 字';
-    document.getElementById('otip').textContent=TIPS[S.target];
-  }catch(e){
-    document.getElementById('otxt').textContent='錯誤：'+e.message+(e.message==='no_key'?' — 請先儲存 API Key':'');
-  }
-  btn.disabled=false;btn.innerHTML='✦ &nbsp;生成 Threads 貼文';
-}
-function cpOut(){if(S.curOut)cp(S.curOut,'已複製 ✓');}
-function savePost(){
-  if(!S.curOut)return;
-  addH({text:S.curOut,type:S.tt,target:S.target});
-  S.stats.total=(S.stats.total||0)+1;S.stats[S.target]=(S.stats[S.target]||0)+1;
-  localStorage.setItem('stats',JSON.stringify(S.stats));updStats();toast('已存入紀錄 ✓');
-}
-
-// ─────────── AGENT ───────────
+const ATOPICS={food:'分析一道常見台灣外食（便當、小吃），揭露真實熱量和營養素',myth:'破解一個台灣人常見飲食迷思，用具體數字說明真相',qa:'設計一個能引發台灣上班族留言互動的飲食問題',tool:'展示 AI 飲食教練的核心功能，用使用前後對比說明',case:'描述一個台灣外食族上班族使用 AI 飲食教練的真實改變故事',science:'把一個重要的營養科學知識用淺顯易懂方式說明'};
 const DEFAULT_SCHED=[
   {day:'週一',dow:1,type:'food',target:'vendor',topic:'食物分析→版主留言',style:'story',on:true},
   {day:'週二',dow:2,type:'myth',target:'own',topic:'飲食迷思破解',style:'list',on:true},
@@ -719,36 +548,199 @@ const DEFAULT_SCHED=[
   {day:'週日',dow:0,type:'food',target:'own',topic:'',style:'hook',on:false},
 ];
 
-function loadSched(){
-  const saved=localStorage.getItem('agent_sched');
-  return saved?JSON.parse(saved):JSON.parse(JSON.stringify(DEFAULT_SCHED));
-}
-function saveSched(sched){localStorage.setItem('agent_sched',JSON.stringify(sched));}
-function resetSched(){if(!confirm('還原為預設排程？'))return;localStorage.removeItem('agent_sched');renderSchedEditor();toast('已還原預設排程');}
+let S={
+  apiKey:localStorage.getItem('ak')||'',
+  tt:'food',style:'hook',target:'own',plat:'threads',tone:'uncle',
+  img64:null,curOut:'',curOuts:{},weekOff:0,agentPosts:[],
+  cal:JSON.parse(localStorage.getItem('cal')||'{}'),
+  hist:JSON.parse(localStorage.getItem('hist')||'[]'),
+  stats:JSON.parse(localStorage.getItem('stats')||'{"threads":0,"ig":0,"fb":0,"total":0}'),
+};
 
-function saveBrand(){
-  localStorage.setItem('brand_f',document.getElementById('bf').value);
-  localStorage.setItem('brand_a',document.getElementById('ba').value);
-  toast('品牌資訊已儲存 ✓');
+// Init
+if(S.apiKey){document.getElementById('kip').value=S.apiKey;document.getElementById('kbar').style.background='#F0FDF4';}
+const _bf=localStorage.getItem('brand_f');if(_bf)document.getElementById('bf').value=_bf;
+const _ba=localStorage.getItem('brand_a');if(_ba)document.getElementById('ba').value=_ba;
+const _rules=localStorage.getItem('writing_rules');if(_rules)document.getElementById('rules-txt').value=_rules;
+updStats();
+
+function saveKey(){const k=document.getElementById('kip').value.trim();if(!k){toast('請輸入 API Key');return;}S.apiKey=k;localStorage.setItem('ak',k);document.getElementById('kbar').style.background='#F0FDF4';toast('API Key 已儲存 ✓');}
+function saveRules(){localStorage.setItem('writing_rules',document.getElementById('rules-txt').value);toast('寫作規則已儲存 ✓');}
+function saveBrand(){localStorage.setItem('brand_f',document.getElementById('bf').value);localStorage.setItem('brand_a',document.getElementById('ba').value);toast('品牌資訊已儲存 ✓');}
+
+function go(n){
+  ['gen','agent','cal','topics','tpl','hist'].forEach(p=>document.getElementById('p-'+p).style.display=p===n?'block':'none');
+  document.querySelectorAll('.nav').forEach((b,i)=>b.classList.toggle('on',['gen','agent','cal','topics','tpl','hist'][i]===n));
+  if(n==='agent')renderSchedEditor();
+  if(n==='cal')renderCal();
+  if(n==='topics')renderTopics();
+  if(n==='tpl')renderTpl('all');
+  if(n==='hist')renderHist();
 }
+
+// Platform
+function selPlat(btn,plat){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');S.plat=plat;
+  const isAll=plat==='all';
+  document.getElementById('target-card').style.display=plat==='threads'?'block':'none';
+  document.getElementById('single-out').style.display=isAll?'none':'block';
+  document.getElementById('triple-out').style.display=isAll?'block':'none';
+  // Auto-adjust word count suggestion
+  const wm={threads:200,ig:300,fb:400,all:300};
+  document.getElementById('maxwords').value=wm[plat];
+  document.getElementById('mw-val').textContent=wm[plat]+'字';
+}
+
+// Tone
+function selTone(btn,tone){
+  document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');S.tone=tone;
+}
+
+// URL management
+function addUrl(){
+  const div=document.createElement('div');div.className='url-row';
+  div.innerHTML='<input type="text" placeholder="貼上網址 https://..." class="url-input"><button class="rm-btn" onclick="rmUrl(this)">✕</button>';
+  document.getElementById('url-list').appendChild(div);
+}
+function rmUrl(btn){const row=btn.closest('.url-row');if(document.querySelectorAll('.url-row').length>1)row.remove();}
+function getUrls(){return [...document.querySelectorAll('.url-input')].map(i=>i.value.trim()).filter(Boolean);}
+
+// Topic type
+function stt(btn,type){
+  document.querySelectorAll('#ttg .cb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');S.tt=type;
+  ['f','m','ha','to','qa','ca','sc','se'].forEach((id,i)=>{
+    const keys=['food','myth','habit','tool','qa','case','science','season'];
+    document.getElementById('i'+id).style.display=keys[i]===type?'block':'none';
+  });
+}
+function sc(btn,gid){document.querySelectorAll('#'+gid+' .chip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');if(gid==='amc'){document.getElementById('vfi').style.display=btn.textContent.includes('版主')?'block':'none';}}
+function scb(btn,gid,val){document.querySelectorAll('#'+gid+' .cb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');if(gid==='tg')S.target=val;}
+
+// Image
+function onImg(e){if(e.target.files[0])loadImg(e.target.files[0]);}
+function onDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadImg(f);}
+document.addEventListener('paste',e=>{for(const item of(e.clipboardData?.items||[])){if(item.type.startsWith('image/')){loadImg(item.getAsFile());break;}}});
+function loadImg(file){const r=new FileReader();r.onload=ev=>{S.img64=ev.target.result.split(',')[1];const img=document.getElementById('pimg');img.src=ev.target.result;img.style.display='block';document.getElementById('dz').classList.add('has');};r.readAsDataURL(file);}
+
+// Prompt builder
+function getContent(){
+  const m={
+    food:()=>document.getElementById('ftxt').value||'（根據圖片分析料理）',
+    myth:()=>document.getElementById('mtxt').value||(document.querySelector('#mc .chip.on')?.textContent||'少吃就會瘦'),
+    habit:()=>document.getElementById('htxt').value||(document.querySelector('#hc .chip.on')?.textContent||''),
+    tool:()=>document.getElementById('ttxt').value||(document.querySelector('#tc .chip.on')?.textContent||''),
+    qa:()=>document.getElementById('qtxt').value||(document.querySelector('#qc .chip.on')?.textContent||''),
+    case:()=>document.getElementById('catxt').value||'',
+    science:()=>document.getElementById('sctxt').value||(document.querySelector('#scc .chip.on')?.textContent||''),
+    season:()=>document.getElementById('setxt').value||(document.querySelector('#sec .chip.on')?.textContent||''),
+  };
+  return m[S.tt]?.();
+}
+
+function mkPrompt(content,plat,tone,target,brand,rules,maxWords,urls,regen){
+  const urlNote=urls.length?`\n參考網址（請擷取這些文章的重點，根據選定角度重新包裝）：\n${urls.join('\n')}`:'';
+  const rulesNote=rules?`\n\n寫作規則（必須嚴格遵守）：\n${rules}`:'';
+  const brandNote=brand?`\n品牌背景：${brand}`:'';
+  const targetNote=plat==='threads'?`\n發文目標：${target==='own'?'自己的 Threads 頁面，語氣直接，CTA 明確':target==='vendor'?'便當/美食版主的留言區，先真誠讚美料理，再提供營養資訊，最後自然帶入 AI 教練':'合作 KOL 頁面，專業互動語氣'}`:'';
+  const re=regen?'\n（請從完全不同角度重寫）':'';
+  return `你是專業的社群媒體文案寫手，幫 AI 飲食教練帳號經營三個平台。${brandNote}
+
+主題內容：${content}${urlNote}
+平台規格：${PLAT_DESC[plat]||PLAT_DESC.threads}
+說話口氣：${TONES[tone]||TONES.uncle}
+字數上限：${maxWords}字以內${targetNote}${rulesNote}
+
+要求：繁體中文，符合平台特性，結尾自然帶入「AI 飲食教練」CTA，只輸出貼文內容，不加說明${re}`;
+}
+
+async function callAPI(prompt,img64){
+  if(!S.apiKey)throw new Error('no_key');
+  const msgs=img64
+    ?[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img64}},{type:'text',text:prompt}]}]
+    :[{role:'user',content:prompt}];
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:msgs})
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API 錯誤 '+res.status);}
+  const d=await res.json();return d.content?.[0]?.text||'';
+}
+
+async function genPost(regen){
+  if(!S.apiKey){toast('請先輸入並儲存 API Key（頂部黃色列）');return;}
+  const urls=getUrls();
+  const content=urls.length?'（根據上方參考網址生成）':getContent();
+  if(!content&&!S.img64&&!urls.length){toast('請輸入主題或網址');return;}
+  const rules=document.getElementById('rules-txt').value;
+  const maxW=document.getElementById('maxwords').value;
+  const brand=`功能：${document.getElementById('bf')?.value||''}，用戶：${document.getElementById('ba')?.value||''}`;
+  const btn=document.getElementById('gbtn');
+  btn.disabled=true;btn.innerHTML='<div class="spin"></div> 生成中...';
+  document.getElementById('ow').style.display='block';
+
+  try{
+    if(S.plat==='all'){
+      document.getElementById('single-out').style.display='none';
+      document.getElementById('triple-out').style.display='block';
+      document.getElementById('otxt-t').textContent='生成中...';
+      document.getElementById('otxt-i').textContent='等待中...';
+      document.getElementById('otxt-f').textContent='等待中...';
+      const platsList=['threads','ig','fb'];
+      const labels=['otxt-t','otxt-i','otxt-f'];
+      const cbIds=['cb-t','cb-i','cb-f'];
+      for(let i=0;i<3;i++){
+        const txt=await callAPI(mkPrompt(content,platsList[i],S.tone,S.target,brand,rules,{threads:200,ig:300,fb:400}[platsList[i]],urls,regen),S.img64);
+        document.getElementById(labels[i]).textContent=txt;
+        document.getElementById(cbIds[i]).textContent=txt.length+'字';
+        S.curOuts[platsList[i]]=txt;
+        if(i<2)document.getElementById(labels[i+1]).textContent='生成中...';
+      }
+      document.getElementById('otip').textContent='💡 三個版本已生成，各自複製到對應平台';
+    }else{
+      document.getElementById('single-out').style.display='block';
+      document.getElementById('triple-out').style.display='none';
+      document.getElementById('otxt').textContent='分析中...';
+      const txt=await callAPI(mkPrompt(content,S.plat,S.tone,S.target,brand,rules,maxW,urls,regen),S.img64);
+      S.curOut=txt;
+      document.getElementById('otxt').textContent=txt;
+      document.getElementById('cb').textContent=txt.length+'字';
+      document.getElementById('out-plat-label').textContent={threads:'Threads 貼文',ig:'Instagram 貼文',fb:'Facebook 貼文'}[S.plat]||'貼文';
+      document.getElementById('otip').textContent=TIPS[S.target]||'';
+      S.stats[S.plat]=(S.stats[S.plat]||0)+1;
+      S.stats.total=(S.stats.total||0)+1;
+      localStorage.setItem('stats',JSON.stringify(S.stats));updStats();
+    }
+  }catch(e){
+    const errEl=document.getElementById(S.plat==='all'?'otxt-t':'otxt');
+    errEl.textContent='錯誤：'+(e.message==='no_key'?'請先儲存 API Key':e.message);
+  }
+  btn.disabled=false;btn.innerHTML='✦ &nbsp;生成貼文';
+}
+
+function cpOut(){if(S.curOut)cp(S.curOut,'已複製 ✓');}
+function savePost(){if(!S.curOut)return;addH({text:S.curOut,type:S.tt,target:S.target,plat:S.plat});toast('已存入紀錄 ✓');}
+function saveAllPosts(){
+  ['threads','ig','fb'].forEach(p=>{if(S.curOuts[p])addH({text:S.curOuts[p],type:S.tt,target:S.target,plat:p});});
+  toast('三平台貼文已存入紀錄 ✓');
+}
+
+// Agent
+function loadSched(){const s=localStorage.getItem('agent_sched');return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_SCHED));}
+function saveSched(s){localStorage.setItem('agent_sched',JSON.stringify(s));}
+function resetSched(){if(!confirm('還原預設排程？'))return;localStorage.removeItem('agent_sched');renderSchedEditor();toast('已還原');}
 
 function renderSchedEditor(){
   const sched=loadSched();
-  const topicOpts=Object.entries(TOPICS).map(([k,v])=>`<option value="${k}">${v.icon} ${v.name}</option>`).join('');
-  const styleOpts=[['hook','鉤子開場'],['list','條列清單'],['story','故事共鳴'],['contrast','對比反差']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
-  const targetOpts=[['own','自己頁面'],['vendor','版主頁面'],['kol','KOL頁面']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
-
   document.getElementById('sched-editor').innerHTML=sched.map((row,i)=>`
-    <div style="display:grid;grid-template-columns:60px 1fr 130px 110px 100px 40px;gap:6px;align-items:center;padding:8px 10px;background:${row.on?'var(--card)':'var(--bg)'};border:1px solid var(--border);border-radius:var(--rs);margin-bottom:5px;opacity:${row.on?1:.5}">
-      <div style="font-size:13px;font-weight:600;color:${row.on?'var(--atxt)':'var(--hint)'}">${row.day}</div>
-      <input type="text" value="${row.topic}" placeholder="自訂主題描述（可空白）"
-        style="font-size:12px;padding:5px 8px"
-        onchange="updSched(${i},'topic',this.value)">
+    <div style="display:grid;grid-template-columns:56px 1fr 130px 100px 40px;gap:6px;align-items:center;padding:7px 10px;background:${row.on?'var(--card)':'var(--bg)'};border:1px solid var(--border);border-radius:var(--rs);margin-bottom:5px;opacity:${row.on?1:.5}">
+      <div style="font-size:13px;font-weight:600;color:var(--atxt)">${row.day}</div>
+      <input type="text" value="${row.topic}" placeholder="主題..." style="font-size:12px;padding:5px 8px" onchange="updSched(${i},'topic',this.value)">
       <select style="font-size:12px;padding:5px 7px" onchange="updSched(${i},'type',this.value)">
         ${Object.entries(TOPICS).map(([k,v])=>`<option value="${k}"${row.type===k?' selected':''}>${v.icon} ${v.name}</option>`).join('')}
-      </select>
-      <select style="font-size:12px;padding:5px 7px" onchange="updSched(${i},'style',this.value)">
-        ${[['hook','鉤子開場'],['list','條列清單'],['story','故事共鳴'],['contrast','對比反差']].map(([v,l])=>`<option value="${v}"${row.style===v?' selected':''}>${l}</option>`).join('')}
       </select>
       <select style="font-size:12px;padding:5px 7px" onchange="updSched(${i},'target',this.value)">
         ${[['own','自己頁面'],['vendor','版主頁面'],['kol','KOL頁面']].map(([v,l])=>`<option value="${v}"${row.target===v?' selected':''}>${l}</option>`).join('')}
@@ -757,34 +749,28 @@ function renderSchedEditor(){
         <input type="checkbox" ${row.on?'checked':''} onchange="updSched(${i},'on',this.checked)" style="width:15px;height:15px;cursor:pointer">
       </label>
     </div>`).join('')+
-    `<div style="font-size:11px;color:var(--hint);margin-top:6px;display:grid;grid-template-columns:60px 1fr 130px 110px 100px 40px;gap:6px;padding:0 10px">
-      <span></span><span>自訂主題</span><span>主題類型</span><span>風格</span><span>發文目標</span><span style="text-align:center">啟用</span>
+    `<div style="font-size:11px;color:var(--hint);display:grid;grid-template-columns:56px 1fr 130px 100px 40px;gap:6px;padding:3px 10px">
+      <span></span><span>自訂主題</span><span>主題類型</span><span>發文目標</span><span style="text-align:center">啟用</span>
     </div>`;
 }
-
-function updSched(i,key,val){
-  const sched=loadSched();
-  sched[i][key]=val;
-  saveSched(sched);
-  renderSchedEditor();
-}
+function updSched(i,key,val){const s=loadSched();s[i][key]=val;saveSched(s);renderSchedEditor();}
 
 async function runAgent(){
   if(!S.apiKey){toast('請先輸入並儲存 API Key');return;}
   const modeTxt=document.querySelector('#amc .chip.on')?.textContent||'';
   const brand=`功能：${document.getElementById('bf').value}，用戶：${document.getElementById('ba').value}`;
+  const rules=localStorage.getItem('writing_rules')||'';
   const btn=document.getElementById('abtn');
   btn.disabled=true;
   document.getElementById('pw').style.display='block';
   document.getElementById('ares').style.display='none';
   S.agentPosts=[];
-
   const sched=loadSched();
   let tasks=[];
   if(modeTxt.includes('版主')){
     const foods=document.getElementById('vft').value.split('\n').filter(f=>f.trim()).slice(0,5);
     const list=foods.length?foods:['滷肉飯便當','韓式炸雞','生菜沙拉'];
-    tasks=list.map((f,i)=>({day:`留言${i+1}`,type:'food',target:'vendor',topic:`分析：${f}`,style:'story'}));
+    tasks=list.map((f,i)=>({day:`留言${i+1}`,type:'food',target:'vendor',topic:`分析：${f}`,style:'story',plat:'threads'}));
   }else if(modeTxt.includes('今日')){
     const today=new Date().getDay();
     const row=sched.find(r=>r.dow===today&&r.on)||sched.find(r=>r.on)||sched[0];
@@ -792,50 +778,39 @@ async function runAgent(){
   }else{
     tasks=sched.filter(r=>r.on);
   }
-
   for(let i=0;i<tasks.length;i++){
     const t=tasks[i];
     document.getElementById('pb').style.width=Math.round(i/tasks.length*100)+'%';
     document.getElementById('ast').textContent=`生成中：${t.day} — ${t.topic}（${i+1}/${tasks.length}）`;
     try{
-      const txt=await callAPI(mkPrompt(ATOPICS[t.type]||t.topic,t.style||'hook',t.target,brand,false));
+      const txt=await callAPI(mkPrompt(ATOPICS[t.type]||t.topic,'threads','uncle',t.target,brand,rules,200,[],false));
       S.agentPosts.push({...t,text:txt});
-      addH({text:txt,type:t.type,target:t.target,day:t.day});
-      S.stats.total=(S.stats.total||0)+1;S.stats[t.target]=(S.stats[t.target]||0)+1;
-    }catch(e){
-      S.agentPosts.push({...t,text:'生成失敗：'+e.message});
-    }
+      addH({text:txt,type:t.type,target:t.target,plat:'threads',day:t.day});
+      S.stats.threads=(S.stats.threads||0)+1;S.stats.total=(S.stats.total||0)+1;
+    }catch(e){S.agentPosts.push({...t,text:'生成失敗：'+e.message});}
     await new Promise(r=>setTimeout(r,600));
   }
-
   document.getElementById('pb').style.width='100%';
-  document.getElementById('ast').textContent=`✓ 完成！共生成 ${S.agentPosts.length} 篇貼文，已存入紀錄`;
+  document.getElementById('ast').textContent=`✓ 完成！共生成 ${S.agentPosts.length} 篇`;
   localStorage.setItem('stats',JSON.stringify(S.stats));updStats();
-
-  // Show results with preview of each post
   document.getElementById('ares-list').innerHTML=S.agentPosts.map((p,i)=>{
-    const tc=TC[p.type]||TC.food;
-    const success=!p.text.startsWith('生成失敗');
-    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;border-left:3px solid ${success?'var(--accent)':'#ef4444'}">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+    const tc=TC[p.type]||TC.food;const ok=!p.text.startsWith('生成失敗');
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;border-left:3px solid ${ok?'var(--accent)':'#ef4444'}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <span class="tag" style="background:${tc[0]};color:${tc[1]}">${TOPICS[p.type]?.name||p.type}</span>
-        <span class="tag" style="background:var(--abg);color:var(--atxt)">${TL[p.target]||p.target}</span>
-        <span style="font-size:12px;font-weight:600;color:var(--text)">${p.day}</span>
+        <span style="font-size:12px;font-weight:600">${p.day}</span>
         <button class="btn g" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="cp('${p.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}','已複製 ✓')">⧉ 複製</button>
       </div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;white-space:pre-wrap;max-height:80px;overflow:hidden;position:relative" id="ar-${i}">${p.text.replace(/</g,'&lt;')}</div>
-      <button onclick="document.getElementById('ar-${i}').style.maxHeight='none';this.style.display='none'" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:4px 0;margin-top:3px">展開全文 ↓</button>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;max-height:72px;overflow:hidden" id="ar-${i}">${p.text.replace(/</g,'&lt;')}</div>
+      <button onclick="document.getElementById('ar-${i}').style.maxHeight='none';this.style.display='none'" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:3px 0">展開 ↓</button>
     </div>`;
   }).join('');
   document.getElementById('ares').style.display='block';
   btn.disabled=false;btn.innerHTML='⚡ &nbsp;開始自動生成';
 }
-function cpAll(){
-  const all=S.agentPosts.map(p=>`【${p.day}｜${p.topic}】\n${p.text}`).join('\n\n────────────────\n\n');
-  cp(all,'全部貼文已複製 ✓');
-}
+function cpAll(){const all=S.agentPosts.map(p=>`【${p.day}｜${p.topic}】\n${p.text}`).join('\n\n────────\n\n');cp(all,'全部已複製 ✓');}
 
-// ─────────── CALENDAR ───────────
+// Calendar
 function dk(d){return d.toISOString().slice(0,10);}
 function wkStart(off){const d=new Date();d.setDate(d.getDate()-d.getDay()+off*7);d.setHours(0,0,0,0);return d;}
 function renderCal(){
@@ -850,133 +825,46 @@ function renderCal(){
     const key=dk(d),sv=S.cal[key],isT=key===today,tpl=WK.find(t=>t.dow===d.getDay());
     const cell=document.createElement('div');
     cell.className=`cc${isT?' today':''}${sv?' filled':''}${tpl?.rest?' rest':''}`;
-    cell.innerHTML=`<div class="cdn">${d.getDate()}</div>${sv
-      ?`<div class="ctp">${sv.topic}</div><span class="ctag" style="background:${TOPICS[sv.type]?.col||'#eee'};color:${TOPICS[sv.type]?.tc||'#333'}">${TOPICS[sv.type]?.name||''}</span>`
-      :tpl&&!tpl.rest?`<div class="ctp" style="color:var(--hint);font-size:10px">${tpl.label}</div>`
-      :tpl?.rest?`<div class="ctp" style="color:var(--hint);font-size:9px">休息/覆盤</div>`:''
-    }`;
-    if(!tpl?.rest)cell.onclick=()=>{
-      const n=prompt(`${d.getMonth()+1}/${d.getDate()} 的主題（留空清除）：`,sv?.topic||tpl?.label||'');
-      if(n===null)return;
-      if(!n.trim())delete S.cal[key]; else S.cal[key]={topic:n,type:tpl?.type||'food'};
-      localStorage.setItem('cal',JSON.stringify(S.cal));renderCal();
-    };
+    cell.innerHTML=`<div class="cdn">${d.getDate()}</div>${sv?`<div class="ctp">${sv.topic}</div><span class="ctag" style="background:${TOPICS[sv.type]?.col||'#eee'};color:${TOPICS[sv.type]?.tc||'#333'}">${TOPICS[sv.type]?.name||''}</span>`:tpl&&!tpl.rest?`<div class="ctp" style="color:var(--hint);font-size:10px">${tpl.label}</div>`:tpl?.rest?`<div class="ctp" style="color:var(--hint);font-size:9px">休息</div>`:''}`;
+    if(!tpl?.rest)cell.onclick=()=>{const n=prompt(`${d.getMonth()+1}/${d.getDate()} 主題（留空清除）：`,sv?.topic||tpl?.label||'');if(n===null)return;if(!n.trim())delete S.cal[key];else S.cal[key]={topic:n,type:tpl?.type||'food'};localStorage.setItem('cal',JSON.stringify(S.cal));renderCal();};
     cg.appendChild(cell);
   }
-  document.getElementById('wtl').innerHTML=WK.map(t=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:7px 9px;background:var(--bg);border-radius:var(--rs)">
-      <span style="font-size:10px;font-weight:700;color:var(--hint);width:18px">${DOW[t.dow]}</span>
-      <span style="font-size:12px;color:var(--text);font-weight:${t.rest?'400':'500'}">${t.label}</span>
-      <span style="font-size:11px;color:var(--muted);margin-left:auto;max-width:140px;text-align:right">${t.tip}</span>
-    </div>`).join('');
+  document.getElementById('wtl').innerHTML=WK.map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 9px;background:var(--bg);border-radius:var(--rs)"><span style="font-size:10px;font-weight:700;color:var(--hint);width:18px">${DOW[t.dow]}</span><span style="font-size:12px;font-weight:${t.rest?'400':'500'}">${t.label}</span><span style="font-size:11px;color:var(--muted);margin-left:auto;max-width:140px;text-align:right">${t.tip}</span></div>`).join('');
 }
 function cw(dir){if(dir===0)S.weekOff=0;else S.weekOff+=dir;renderCal();}
-function applyWk(){
-  const ws=wkStart(S.weekOff);
-  WK.forEach(t=>{
-    if(t.rest)return;
-    const d=new Date(ws),diff=t.dow-ws.getDay();
-    d.setDate(ws.getDate()+(diff>=0?diff:diff+7));
-    S.cal[dk(d)]={topic:t.label,type:t.type};
-  });
-  localStorage.setItem('cal',JSON.stringify(S.cal));renderCal();toast('已套用建議排程 ✓');
-}
+function applyWk(){const ws=wkStart(S.weekOff);WK.forEach(t=>{if(t.rest)return;const d=new Date(ws),diff=t.dow-ws.getDay();d.setDate(ws.getDate()+(diff>=0?diff:diff+7));S.cal[dk(d)]={topic:t.label,type:t.type};});localStorage.setItem('cal',JSON.stringify(S.cal));renderCal();toast('已套用 ✓');}
 
-// ─────────── TOPICS ───────────
+// Topics
 function renderTopics(){
-  document.getElementById('thub').innerHTML=Object.entries(TOPICS).map(([k,v])=>
-    `<div class="topc" onclick="goTopic('${k}')">
-      <div style="font-size:20px;margin-bottom:6px">${v.icon}</div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:3px">${v.name}</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.5">${v.desc}</div>
-      <span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${v.col};color:${v.tc};display:inline-block;margin-top:6px;font-weight:500">每週 ${v.freq} 則</span>
-    </div>`).join('');
+  document.getElementById('thub').innerHTML=Object.entries(TOPICS).map(([k,v])=>`<div class="topc" onclick="goTopic('${k}')"><div style="font-size:20px;margin-bottom:6px">${v.icon}</div><div style="font-size:13px;font-weight:600;margin-bottom:3px">${v.name}</div><div style="font-size:11px;color:var(--muted);line-height:1.5">${v.desc}</div><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${v.col};color:${v.tc};display:inline-block;margin-top:6px;font-weight:500">每週 ${v.freq} 則</span></div>`).join('');
   const tot=Object.values(TOPICS).reduce((s,v)=>s+v.freq,0);
-  document.getElementById('flist').innerHTML=Object.entries(TOPICS).map(([k,v])=>{
-    const pct=Math.round(v.freq/tot*100);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:12px;width:85px;flex-shrink:0">${v.icon} ${v.name}</span>
-      <div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${v.tc};border-radius:3px"></div>
-      </div>
-      <span style="font-size:11px;color:var(--muted);width:42px;text-align:right">每週 ${v.freq} 則</span>
-    </div>`;
-  }).join('');
+  document.getElementById('flist').innerHTML=Object.entries(TOPICS).map(([k,v])=>{const pct=Math.round(v.freq/tot*100);return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;width:85px;flex-shrink:0">${v.icon} ${v.name}</span><div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${v.tc};border-radius:3px"></div></div><span style="font-size:11px;color:var(--muted);width:42px;text-align:right">每週 ${v.freq} 則</span></div>`;}).join('');
 }
-function goTopic(type){
-  go('gen');
-  const keys=Object.keys(TOPICS);
-  const btn=document.querySelector(`#ttg .cb:nth-child(${keys.indexOf(type)+1})`);
-  if(btn)stt(btn,type);
-}
+function goTopic(type){go('gen');const keys=Object.keys(TOPICS);const btn=document.querySelector(`#ttg .cb:nth-child(${keys.indexOf(type)+1})`);if(btn)stt(btn,type);}
 
-// ─────────── TEMPLATES ───────────
+// Templates
 function renderTpl(filter){
   const list=filter==='all'?TMPLS:TMPLS.filter(t=>t.type===filter||t.target===filter);
-  document.getElementById('tlist').innerHTML=list.map(t=>{
-    const tc=TC[t.type]||TC.food,tr=TC[t.target]||TC.food;
-    return `<div class="tc">
-      <div class="tcm">
-        <span class="tag" style="background:${tc[0]};color:${tc[1]}">${TOPICS[t.type]?.name||t.type}</span>
-        <span class="tag" style="background:${tr[0]};color:${tr[1]}">${TL[t.target]||t.target}</span>
-        <span style="font-size:12px;color:var(--muted);margin-left:auto">${t.title}</span>
-      </div>
-      <div class="tcb">${t.body}</div>
-      <div class="brow" style="margin-top:8px">
-        <button class="btn g" onclick="cp(TMPLS.find(x=>x.id==${t.id}).body,'範本已複製 ✓')">⧉ 複製</button>
-        <button class="btn" onclick="addH({text:TMPLS.find(x=>x.id==${t.id}).body,type:'${t.type}',target:'${t.target}'});toast('已存入紀錄 ✓')">↓ 存入紀錄</button>
-      </div>
-    </div>`;
-  }).join('');
+  document.getElementById('tlist').innerHTML=list.map(t=>{const tc2=TC[t.type]||TC.food,tr=TC[t.target]||TC.food;return `<div class="tc"><div class="tcm"><span class="tag" style="background:${tc2[0]};color:${tc2[1]}">${TOPICS[t.type]?.name||t.type}</span><span class="tag" style="background:${tr[0]};color:${tr[1]}">${TL[t.target]||t.target}</span><span style="font-size:12px;color:var(--muted);margin-left:auto">${t.title}</span></div><div class="tcb">${t.body}</div><div class="brow" style="margin-top:8px"><button class="btn g" onclick="cp(TMPLS.find(x=>x.id==${t.id}).body,'範本已複製 ✓')">⧉ 複製</button><button class="btn" onclick="addH({text:TMPLS.find(x=>x.id==${t.id}).body,type:'${t.type}',target:'${t.target}',plat:'threads'});toast('已存入紀錄 ✓')">↓ 存入</button></div></div>`;}).join('');
 }
-function ftpl(btn,f){
-  document.querySelectorAll('#tf .chip').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');renderTpl(f);
-}
+function ftpl(btn,f){document.querySelectorAll('#tf .chip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTpl(f);}
 
-// ─────────── HISTORY ───────────
-function addH(item){
-  item.id=Date.now();item.time=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  S.hist.unshift(item);if(S.hist.length>80)S.hist.pop();
-  localStorage.setItem('hist',JSON.stringify(S.hist));
-}
+// History
+function addH(item){item.id=Date.now();item.time=new Date().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});S.hist.unshift(item);if(S.hist.length>80)S.hist.pop();localStorage.setItem('hist',JSON.stringify(S.hist));}
 function renderHist(){
   const el=document.getElementById('hlist');
   if(!S.hist.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">還沒有紀錄，生成後點「存入紀錄」</p>';return;}
-  el.innerHTML=S.hist.map(h=>{
-    const tc=TC[h.type]||TC.food;
-    return `<div class="tc" onclick="cp('${h.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}','已複製 ✓')">
-      <div class="tcm">
-        <span class="tag" style="background:${tc[0]};color:${tc[1]}">${TOPICS[h.type]?.name||'貼文'}</span>
-        <span class="tag" style="background:var(--abg);color:var(--atxt)">${TL[h.target]||''}</span>
-        ${h.day?`<span class="tag" style="background:var(--bg);color:var(--muted)">${h.day}</span>`:''}
-        <span style="font-size:11px;color:var(--hint);margin-left:auto">${h.time}</span>
-      </div>
-      <div class="tcb">${h.text.replace(/</g,'&lt;')}</div>
-    </div>`;
-  }).join('');
+  const platColor={threads:['#EAF4EE','#0F3D22'],ig:['#FCE4EC','#880E4F'],fb:['#E3F2FD','#0D47A1']};
+  const platLabel={threads:'Threads',ig:'IG',fb:'FB'};
+  el.innerHTML=S.hist.map(h=>{const tc2=TC[h.type]||TC.food,pc=platColor[h.plat]||platColor.threads;return `<div class="tc" onclick="cp('${h.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}','已複製 ✓')"><div class="tcm"><span class="tag" style="background:${tc2[0]};color:${tc2[1]}">${TOPICS[h.type]?.name||'貼文'}</span><span class="tag" style="background:${pc[0]};color:${pc[1]}">${platLabel[h.plat]||''}</span>${h.day?`<span class="tag" style="background:var(--bg);color:var(--muted)">${h.day}</span>`:''}<span style="font-size:11px;color:var(--hint);margin-left:auto">${h.time}</span></div><div class="tcb">${h.text.replace(/</g,'&lt;')}</div></div>`;}).join('');
 }
-function clearH(){if(!confirm('確定清除所有紀錄？'))return;S.hist=[];localStorage.removeItem('hist');renderHist();toast('已清除');}
-function exportAll(){
-  const txt=S.hist.map(h=>`[${h.time}]${h.day?' '+h.day:''} ${TOPICS[h.type]?.name||''} → ${TL[h.target]||''}\n${h.text}`).join('\n\n───────────────\n\n');
-  const a=document.createElement('a');
-  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
-  a.download='threads_posts_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.txt';
-  a.click();toast('匯出完成 ✓');
-}
+function clearH(){if(!confirm('確定清除？'))return;S.hist=[];localStorage.removeItem('hist');renderHist();toast('已清除');}
+function exportAll(){const txt=S.hist.map(h=>`[${h.time}][${h.plat||''}] ${TOPICS[h.type]?.name||''}\n${h.text}`).join('\n\n───\n\n');const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);a.download='posts_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.txt';a.click();toast('匯出完成 ✓');}
 
-// ─────────── UTILS ───────────
-function updStats(){
-  document.getElementById('st0').textContent=S.stats.total||0;
-  document.getElementById('st1').textContent=S.stats.own||0;
-  document.getElementById('st2').textContent=S.stats.vendor||0;
-  document.getElementById('st3').textContent=S.stats.kol||0;
-}
+// Utils
+function updStats(){document.getElementById('st0').textContent=S.stats.total||0;document.getElementById('st1').textContent=S.stats.threads||0;document.getElementById('st2').textContent=S.stats.ig||0;document.getElementById('st3').textContent=S.stats.fb||0;}
 function cp(text,msg){navigator.clipboard.writeText(text).then(()=>toast(msg||'已複製 ✓'));}
-function toast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200);
-}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 </script>
 </body>
 </html>
