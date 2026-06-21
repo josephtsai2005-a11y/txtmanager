@@ -95,6 +95,16 @@ textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var
 .rm-btn{padding:6px 10px;border-radius:var(--rs);border:1px solid var(--border);background:none;cursor:pointer;color:var(--muted);font-size:13px;flex-shrink:0}
 .rm-btn:hover{border-color:#ef4444;color:#ef4444}
 
+/* Product recommendation cards */
+.rec-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .12s}
+.rec-card:hover{border-color:var(--accent)}
+.rec-card.sel{border-color:var(--accent);background:var(--abg)}
+.rec-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.rec-checkbox{width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.rec-name{font-size:13px;font-weight:600;color:var(--text)}
+.rec-reason{font-size:12px;color:var(--muted);line-height:1.5;padding-left:24px}
+.rec-none{font-size:13px;color:var(--muted);padding:10px 12px;background:var(--bg);border-radius:var(--rs);text-align:center}
+
 /* Info */
 .info{border-radius:var(--rs);padding:9px 12px;font-size:12px;line-height:1.6;margin-top:8px}
 .ig{background:var(--abg);color:var(--atxt)}
@@ -176,6 +186,7 @@ textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var
   <button class="nav" onclick="go('cal')">▦ &nbsp;週行事曆</button>
   <button class="nav" onclick="go('topics')">◈ &nbsp;主題庫</button>
   <button class="nav" onclick="go('tpl')">⊞ &nbsp;範本庫</button>
+  <button class="nav" onclick="go('products')">🧪 &nbsp;產品知識庫</button>
   <div class="sb-sec">紀錄</div>
   <button class="nav" onclick="go('hist')">◷ &nbsp;發文紀錄</button>
   <div class="sb-foot">
@@ -215,12 +226,35 @@ textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var
     <div class="ct">參考網址（可選）— 貼上文章連結，AI 自動分析內容並重製</div>
     <div id="url-list">
       <div class="url-row">
-        <input type="text" placeholder="貼上專業文章網址 https://..." class="url-input">
+        <input type="text" placeholder="貼上專業文章網址 https://..." class="url-input" oninput="checkUrlState()">
         <button class="rm-btn" onclick="rmUrl(this)">✕</button>
       </div>
     </div>
     <button class="btn" style="margin-top:6px;font-size:12px" onclick="addUrl()">+ 新增網址</button>
-    <div class="info ib" style="margin-top:10px">💡 貼上網址後 AI 會擷取文章重點，根據你選的角度重新包裝成貼文，不需要再輸入主題</div>
+    <div class="info ib" style="margin-top:10px" id="url-hint">💡 貼上網址後 AI 會擷取文章重點，根據你選的角度重新包裝成貼文，不需要再輸入主題</div>
+
+    <!-- OnePack second-layer toggle (only shown when URL present) -->
+    <div id="onepack-section" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
+        <input type="checkbox" id="onepack-toggle" onchange="toggleOnePack()" style="width:17px;height:17px;cursor:pointer;flex-shrink:0">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">套用「One Pack 大叔」第二層改寫規範</span>
+      </label>
+      <div id="onepack-options" style="display:none;padding-left:27px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">用大叔視角＋生活化比喻重新包裝，套用 211餐盤、代謝優化等品牌語彙</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="onepack-product" onchange="onProductToggleChange()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
+          <span style="font-size:13px;color:var(--text)">適時導入 One Pack 產品（AI 推薦，你核准）</span>
+        </label>
+        <div class="info iy" id="onepack-tip" style="display:none;margin-top:6px">⚠️ 產品導入會以「自然融入生活情境」的方式呈現，不提療效字眼，符合直銷公開貼文規範</div>
+
+        <!-- Product recommendation flow -->
+        <div id="product-rec-section" style="display:none;margin-top:10px">
+          <button class="btn" style="font-size:12px" onclick="recommendProducts()" id="rec-btn">🔍 分析主題並推薦相關產品</button>
+          <div id="rec-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+          <div id="rec-results" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Topic type -->
@@ -486,6 +520,25 @@ textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var
   <div id="tlist"></div>
 </div>
 
+<!-- ===== PRODUCT KNOWLEDGE BASE ===== -->
+<div class="pg" id="p-products" style="display:none">
+  <div class="ph">產品知識庫</div>
+  <div class="ps">One Pack 大叔規範改寫時，AI 會從這裡挑選相關產品。資料可直接編輯，存在本機瀏覽器。</div>
+
+  <div class="info ig" style="margin-bottom:14px">💡 這份資料整理自 Synergy 官方「全方位健康管理手冊」，已過濾掉任何療效宣稱，只保留官方核可的保健功效用語（PDR標準）。如發現措辭需要調整，可直接編輯。</div>
+
+  <div class="card">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="prod-search" placeholder="搜尋產品名稱、成分、適合對象..." oninput="renderProducts()" style="flex:1;min-width:200px">
+      <button class="btn g" onclick="addProduct()">+ 新增產品</button>
+      <button class="btn" onclick="resetProducts()">↺ 還原官方資料</button>
+      <button class="btn" onclick="exportProducts()">↓ 匯出 JSON</button>
+    </div>
+  </div>
+
+  <div id="products-list"></div>
+</div>
+
 <!-- ===== HISTORY ===== -->
 <div class="pg" id="p-hist" style="display:none">
   <div class="ph">發文紀錄</div>
@@ -537,6 +590,29 @@ const TIPS={own:'💡 最佳時間：週一到五 12:00–13:00 或 20:00–22:0
 const DOW=['日','一','二','三','四','五','六'];
 const TL={own:'自己頁面',vendor:'版主頁面',kol:'KOL頁面'};
 const TC={food:['#EAF4EE','#0F3D22'],myth:['#FEF9C3','#713F12'],tool:['#F3E8FF','#4A1D96'],qa:['#FFF0F0','#7F1D1D'],vendor:['#FFFBEB','#78350F'],season:['#FFF7ED','#7C2D12'],case:['#FDF4FF','#581C87'],science:['#F0FDF4','#14532D'],habit:['#EFF6FF','#1E3A5F']};
+const ONEPACK_RULES = `你現在要把這篇內容改寫成「One Pack 大叔」FB 粉專風格的最終版本。這是第二層改寫，請完全按照以下規範重新撰寫，不是微調：
+
+【核心風格與語調】
+- 生活化與專業兼具：以溫暖、有同理心且帶幽默感的「大叔」視角切入
+- 把複雜生醫概念（尿素循環、微循環阻礙、胰島素阻抗）轉化成生活比喻（垃圾清運、鐵門生鏽、燃脂齒輪）
+- 精準俐落，嚴格避免語助詞（喔、啊、囉、呢），維持專業果斷語氣
+- 數據與結果導向：強調「身體機能優化」「紅字轉黑字」，而非單純減重；注重「高營養密度」的預防醫學觀點
+
+【貼文結構（四大區塊，務必都要有，用空行分隔，避免文字牆）】
+1. 情境切入/痛點共鳴：第一句直擊受眾痛點（職場菁英、雙寶媽、護理師的久坐、疲勞、更年期、肥胖），或引用名人/最新研究數據當 Hook
+2. 科學拆解/觀點核心：用條列式（1️⃣2️⃣3️⃣ 或 *）拆解問題元兇，自然帶入「211餐盤」「高營養密度公式」或代謝/微循環邏輯（排氨燃脂、細胞大掃除）
+3. 大叔碎碎念/實戰建議：給低門檻可立即執行的生活化建議（調整飲食順序、超商挑選指南），展現陪伴感與實戰經驗
+4. 行動呼籲(CTA)＋標籤：結尾設計主動引導互動的問題（詢問健檢數值、分享個人菜單），導向留言或私訊大叔諮詢。固定標籤從中選用：#OnePack大叔 #全心健康計畫 #211餐盤 #代謝優化 #從紅字轉黑字
+
+【格式規則】
+- 對「數據」「關鍵字詞」加粗（**文字**）引導視覺掃描
+- 善用 emoji 數字符號（1️⃣2️⃣3️⃣）做條列
+- 避免密密麻麻的文字牆，多用空行`;
+
+const ONEPACK_PRODUCT_NOTE = `\n\n【關於產品導入】請在第3區塊「大叔碎碎念」自然提及 One Pack 產品作為生活情境裡的選擇之一（例如：忙到沒空準備211餐盤時的補充選項），語氣是分享而非推銷，絕對不能宣稱療效、治療效果或醫療功能，只能用「補充」「搭配」「我自己也會用」這類生活化用語。`;
+
+const DEFAULT_PRODUCTS = [{"id":"proargi9","name":"普精耐隨身包 PROARGI-9+","cat":"心血管健康","key_ingredient":"左旋精胺酸 5000mg、葡萄皮萃取物","official_claim":"全方位營養補給可達到調節生理機能、增強體力的效果。維生素B6有助於維持胺基酸正常代謝；葉酸有助於核酸與核蛋白的形成；維生素B12增進神經系統的健康。","pdr_quote":"PROARGI-9+普精耐為高品質的左旋精胺酸保健品，適合日常營養補充使用。","for":"關注心血管健康者、排便不順者、希望控制體重者、經常外食者、健身人士","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"proguard","name":"普益康隨身包 PROGUARD","cat":"心血管健康、體重管理","key_ingredient":"β-葡聚糖、維生素B6、C、D、鋅","official_claim":"普益康隨身包配方經由頂尖科學專家研究開發，幫助維持人體自我保護力。","pdr_quote":"幫助維持人體自我保護力","for":"關注心血管健康、提升免疫及管理血糖","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"synerbeet","name":"紅色能量隨身包 SYNERBEET","cat":"心血管健康、腸道健康","key_ingredient":"紅甜菜根、硝酸鹽、鉀、維生素C","official_claim":"紅色能量隨身包配方含有紅甜菜根及豐富植物萃取，每天食用幫助健康維持。","for":"關注心血管健康者、排便不順者、希望控制體重者、經常外食者、健身人士","caution":"12歲以下孩童不建議食用、孕婦、消化不良者"},{"id":"vitalift","name":"威特立能量補給飲品 VITALIFT","cat":"精神體力","key_ingredient":"天然瓜拿納果實微量咖啡因、維生素B群","official_claim":"提升精神與專注力，讓您維持精力充沛。維生素B1幫助維持皮膚、心臟及神經系統正常功能；B2有助維持能量正常代謝及皮膚健康；B6有助維持胺基酸正常代謝及紅血球中血紅素的形成。","for":"精神不佳者、想增強活力者、經常眼睛疲勞、需提高集中力的考生、經常上夜班、長時間駕駛者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"vitapak","name":"威特倍綜合維生素礦物質 VITAPAK","cat":"基礎營養","key_ingredient":"17種維生素礦物質、11種天然植萃（含綠茶、葡萄籽）","official_claim":"補充人體17種關鍵維生素及礦物質，結合11種天然植萃，適合關注日常營養攝取的人群。維生素群增進皮膚、神經系統、黏膜及消化系統健康，並維持能量正常代謝；礦物質有助於心臟、肌肉及神經正常功能，也有助於抗氧化；天然植萃幫助維持健康、消化道機能，同時調整體質。","for":"關注日常營養攝取者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"synemax","name":"紅妍金透飲 SYNEMAX","cat":"養顏美容、腸道健康","key_ingredient":"蘆薈萃取、紅石榴萃取、多種胺基酸","official_claim":"蘆薈及石榴等多種珍貴植物營養成分，添加多種維生素及胺基酸，提供活力滿滿的營養。蘆薈萃取含天然植物精華，幫助養顏美容；紅石榴萃取蘊含多種維生素及珍貴多酚，深入滋養保持青春活力。","for":"排便不順者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"noniplus","name":"蘿苓果綜合果汁 NONI PLUS","cat":"心血管健康、腸道健康","key_ingredient":"蘿苓果（諾麗果）","official_claim":"營養豐富的水果濃縮果汁及萃取，幫助調整體質並維持健康。蘿苓果富含維生素和礦物質，被譽為「上帝的恩賜」，不僅能維持身體機能，還能調整體質、養顏美容。","for":"排便不順者、經常外食者、控制體重者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"mistica","name":"巴西莓綜合果汁 MISTICA","cat":"養顏美容、眼部保健","key_ingredient":"巴西莓萃取（花青素）、膳食纖維","official_claim":"巴西莓富含花青素及多種植萃成分，維持健康並延續青春活力。花青素提供營養補給，維持身體機能；膳食纖維幫助維持消化道機能、使排便順暢。","for":"長時間用眼者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"cravecontrol","name":"穩控隨身包 CRAVE CONTROL","cat":"體重管理","key_ingredient":"膳食纖維、吡啶甲酸鉻、果寡糖、葡萄皮萃取物","official_claim":"含有膳食纖維，可增加飽足感，並含有鉻能幫助維持醣類正常代謝。果寡糖改變細菌叢生態，幫助維持消化道機能；吡啶甲酸鉻有助於維持醣類正常代謝、健康維持；葡萄皮萃取物阻隔外界壓力，青春美麗。","for":"減重管理者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"doubleburn","name":"倍然膠囊食品 DOUBLE BURN","cat":"體重管理","key_ingredient":"藤黃果萃取、綠茶葉萃取、綠咖啡豆萃取、辣椒粉","official_claim":"隔絕您不必要的攝取，調節生理功能，促進新陳代謝，輕鬆維持理想體態。藤黃果隔絕多餘攝取；綠茶調整體質、促進營養吸收利用；綠咖啡豆調節生理機能、維持正常代謝；辣椒粉促進新陳代謝、幫助消化。","for":"減重管理者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"fiberdtx","name":"舒益纖隨身包 FIBER DTX","cat":"腸胃健康、體重管理","key_ingredient":"洋車前子、蘋果纖維、亞麻仁籽、麩醯胺酸","official_claim":"多元的膳食纖維來源，包括洋車前子、蘋果纖維、亞麻仁籽及多種蔬果，提供全方位膳食纖維。洋車前子被喻為超級纖維，種子外殼被廣泛用作天然膳食纖維來源。","for":"減重者、腸胃不佳者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"probiotic1000","name":"植酵複合益生菌 PROBIOTIC 1000+","cat":"腸胃健康、體重管理","key_ingredient":"千億益生菌、6種益生質、88種彩虹蔬果植化素、消化酵素","official_claim":"出廠千億菌，88種彩虹蔬果，經發酵處理，產出更多的7色植化素，增強守護力。益生菌改變消化道細菌叢生態，維持消化道機能。","for":"腸胃不佳、免疫力差者","caution":"對麩質過敏者不適用"},{"id":"liquidca","name":"液鈣關健飲 LIQUID CA+ ACTIVE","cat":"睡眠管理、骨骼健康","key_ingredient":"專利超微米分子液態鈣、維生素D、黑胡椒素","official_claim":"專利超微米分子液態鈣，好喝好消化好吸收，軟硬兼顧，天天補鈣，維持靈活行動力。檸檬酸鈣有助於維持骨骼與牙齒的正常發育及健康，有助於肌肉與心臟的正常收縮及神經的感應性；維生素D增進鈣吸收，幫助骨骼和牙齒的生長發育。","for":"骨關節不適者或睡眠不佳者","caution":"無"},{"id":"synerglow","name":"耀妍膠原蛋白飲 SYNERGLOW COLLAGEN DRINK","cat":"養顏美容","key_ingredient":"法國5000mg魚源膠原蛋白、穀胱甘肽、維生素C、山竹、藍莓、普洱茶、余甘子、魔芋","official_claim":"含有法國5,000mg魚源膠原蛋白，並添加穀胱甘肽、維生素C、山竹、藍莓、普洱茶、余甘子及魔芋等多種優質植物營養。","for":"關注肌膚保養、希望維持青春活力者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"acomega3","name":"優美佳魚油 AC OMEGA-3","cat":"心血管健康","key_ingredient":"rTG型魚油、DHA 492mg、EPA 658mg","official_claim":"來自深海的魚油，含有滿滿的DHA及EPA之Omega-3脂肪酸，調節生理機能，維持健康。rTG型魚油吸收率高，特殊微粒子科技，提升效益，尤其在隨餐食用時吸收更有效率。","for":"關注心血管健康、促進代謝、有助大腦和眼睛保健者","caution":"孕婦、糖尿病患者或有使用凝血劑者，須徵詢醫師意見"},{"id":"bprime","name":"果然鎂膠囊 B-PRIME","cat":"睡眠管理、骨骼健康、心血管健康","key_ingredient":"鎂420mg、歐洲李","official_claim":"滿足每日所需的鎂，有助於維持醣類的正常代謝，有助於骨骼及牙齒的正常發育。歐洲李營養價值豐富，富含可溶性與不溶性膳食纖維，有助於腸道蠕動，使排便順暢。","for":"骨關節不適者或睡眠不佳者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"bodiguard","name":"普達深海鯊寶 BODI GUARD","cat":"精神體力","key_ingredient":"烷基甘油140mg、鯊魚肝油","official_claim":"嚴選自純淨海域的鯊魚肝臟提煉，並以低溫冷壓萃取而成。稀有的烷基甘油，特別適合發育期孩童、想滋補強身的年長者或增加元氣的營養補充。","for":"發育期孩童、想滋補強身的年長者或增加元氣的營養補充","caution":"小孩（指年齡過小者，依包裝指示）"},{"id":"livcare","name":"利維可膠囊食品 LIV-CARE","cat":"基礎養護","key_ingredient":"朝鮮薊葉萃取、薑黃根莖粉、五味子果實萃取","official_claim":"嚴選多種天然植萃與營養素，搭配溫和好吸收的植物性膠囊，讓身體維持良好平衡狀態，為忙碌生活注入穩定支持。朝鮮薊葉傳統上用於滋補強身、增強體力；薑黃根莖粉傳統上常用於促進新陳代謝、調節生理機能；五味子果實萃取有助於調整體質。","for":"忙碌生活、重視日常養護者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"circuprime","name":"倍優紅麴膠囊食品 CIRCUPRIME","cat":"心血管健康","key_ingredient":"紅麴（Monacolin K）、納豆激酶、反式白藜蘆醇","official_claim":"精選天然紅麴，搭配納豆激酶與反式白藜蘆醇，適合重視健康管理的族群，作為規律生活與均衡飲食的營養補充。紅麴含活性精華Monacolin K，是科學證實能有效調節生理機能的黃金成分，幫助維持健康狀態；納豆激酶為日常健康管理所設計，有助於守護健康基底；反式白藜蘆醇擁有優異的調整體質及調節生理機能功效。","for":"重視健康管理的族群","caution":"服用抗凝血劑、肝腎功能異常者須詢醫師（紅麴常見禁忌，建議標註）"},{"id":"trugreen","name":"葉綠飲隨身包 TRU GREEN+","cat":"心血管健康","key_ingredient":"鐵葉綠素鈉、菊糖","official_claim":"萊姆與薄荷兩種自然風味，菊糖與高膳食纖維，幫助您獲得滿滿營養支持。含有豐富的綠色精華，膳食纖維來源，助您調整生理機能，促進生理健康代謝。菊糖為可溶性膳食纖維，促進腸胃蠕動使排便順暢；益生元，幫助維持消化道機能；調節生理機能，健康維持。","pdr_quote":"葉綠飲隨身包有助於調整生理機能。","for":"關注心血管健康、促進代謝者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"synergreen","name":"綠色能量 SYNERGREEN","cat":"基礎營養","key_ingredient":"薑黃、藜、鼠尾草籽","official_claim":"滿足4大類食物，包括水果類、蔬菜類、全穀雜糧類、堅果種子類，補充每日營養的絕佳飲品。","for":"想補充每日基礎營養者","caution":"對花生等核果過敏者應小心食用"},{"id":"veganprotein","name":"全植舒眠優蛋白(奶茶) GA NIGHT VEGAN PROTEIN DRINK","cat":"體重管理","key_ingredient":"大豆及豌豆分離蛋白、麩胺酸發酵物(含GABA)、L-白胺酸、中鏈脂肪酸","official_claim":"全素的優質植物蛋白，大豆及豌豆分離蛋白，同時添加麩胺酸發酵物（含GABA）、L-白胺酸及中鏈脂肪酸。","for":"增肌減脂者、減重者、吃素者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"},{"id":"maxprotein","name":"優蛋白粉末食品 MAXIMUM PROTEIN","cat":"體重管理","key_ingredient":"濃縮乳清蛋白、分離乳清蛋白、牛磺酸","official_claim":"豐富蛋白質幫助您肌肉生長，適合運動後營養補充。每份提供23克蛋白質，有助於支持整體健康與活力。蛋白質是人體細胞、組織、器官的主要構成物質，幫助生長發育，有助於組織的修復，為肌肉合成的來源之一，可用於肌肉生長。牛磺酸增強體力，營養補給。","pdr_quote":"優蛋白粉末食品每份提供23克蛋白質，有助於支持整體健康與活力。","for":"增肌減脂者、減重者","caution":"小孩不適合"},{"id":"balanceshake","name":"優衡穀物脆粒蛋白粉 BALANCE SHAKE CRUNCH","cat":"體重管理","key_ingredient":"分離大豆蛋白、分離牛乳蛋白、分離乳清蛋白、分離大豆胜肽蛋白","official_claim":"全方位蛋白補給，營養吸收更到位，每份24公克蛋白質飽足您的一餐。提供完整胺基酸組合，營養全面、易於吸收，特別添加白胺酸與胱胺酸，搭配多種穀物粉，補充多元營養，提升整體口感與飽足感。","for":"想用蛋白飽足正餐者、體重管理者","caution":"哺乳、懷孕須經由專業醫護人員指導下使用"}];
+
 const ATOPICS={food:'分析一道常見台灣外食（便當、小吃），揭露真實熱量和營養素',myth:'破解一個台灣人常見飲食迷思，用具體數字說明真相',qa:'設計一個能引發台灣上班族留言互動的飲食問題',tool:'展示 AI 飲食教練的核心功能，用使用前後對比說明',case:'描述一個台灣外食族上班族使用 AI 飲食教練的真實改變故事',science:'把一個重要的營養科學知識用淺顯易懂方式說明'};
 const DEFAULT_SCHED=[
   {day:'週一',dow:1,type:'food',target:'vendor',topic:'食物分析→版主留言',style:'story',on:true},
@@ -552,6 +628,7 @@ let S={
   apiKey:localStorage.getItem('ak')||'',
   tt:'food',style:'hook',target:'own',plat:'threads',tone:'uncle',
   img64:null,curOut:'',curOuts:{},weekOff:0,agentPosts:[],
+  lastRecs:null,approvedProducts:[],
   cal:JSON.parse(localStorage.getItem('cal')||'{}'),
   hist:JSON.parse(localStorage.getItem('hist')||'[]'),
   stats:JSON.parse(localStorage.getItem('stats')||'{"threads":0,"ig":0,"fb":0,"total":0}'),
@@ -569,13 +646,14 @@ function saveRules(){localStorage.setItem('writing_rules',document.getElementByI
 function saveBrand(){localStorage.setItem('brand_f',document.getElementById('bf').value);localStorage.setItem('brand_a',document.getElementById('ba').value);toast('品牌資訊已儲存 ✓');}
 
 function go(n){
-  ['gen','agent','cal','topics','tpl','hist'].forEach(p=>document.getElementById('p-'+p).style.display=p===n?'block':'none');
-  document.querySelectorAll('.nav').forEach((b,i)=>b.classList.toggle('on',['gen','agent','cal','topics','tpl','hist'][i]===n));
+  ['gen','agent','cal','topics','tpl','hist','products'].forEach(p=>document.getElementById('p-'+p).style.display=p===n?'block':'none');
+  document.querySelectorAll('.nav').forEach((b,i)=>b.classList.toggle('on',['gen','agent','cal','topics','tpl','products','hist'][i]===n));
   if(n==='agent')renderSchedEditor();
   if(n==='cal')renderCal();
   if(n==='topics')renderTopics();
   if(n==='tpl')renderTpl('all');
   if(n==='hist')renderHist();
+  if(n==='products')renderProducts();
 }
 
 // Platform
@@ -601,11 +679,99 @@ function selTone(btn,tone){
 // URL management
 function addUrl(){
   const div=document.createElement('div');div.className='url-row';
-  div.innerHTML='<input type="text" placeholder="貼上網址 https://..." class="url-input"><button class="rm-btn" onclick="rmUrl(this)">✕</button>';
+  div.innerHTML='<input type="text" placeholder="貼上網址 https://..." class="url-input" oninput="checkUrlState()"><button class="rm-btn" onclick="rmUrl(this)">✕</button>';
   document.getElementById('url-list').appendChild(div);
 }
-function rmUrl(btn){const row=btn.closest('.url-row');if(document.querySelectorAll('.url-row').length>1)row.remove();}
+function rmUrl(btn){const row=btn.closest('.url-row');if(document.querySelectorAll('.url-row').length>1)row.remove();checkUrlState();}
 function getUrls(){return [...document.querySelectorAll('.url-input')].map(i=>i.value.trim()).filter(Boolean);}
+function checkUrlState(){
+  const has=getUrls().length>0;
+  document.getElementById('onepack-section').style.display=has?'block':'none';
+  if(!has){
+    document.getElementById('onepack-toggle').checked=false;
+    document.getElementById('onepack-options').style.display='none';
+  }
+}
+function toggleOnePack(){
+  const on=document.getElementById('onepack-toggle').checked;
+  document.getElementById('onepack-options').style.display=on?'block':'none';
+}
+function onProductToggleChange(){
+  const on=document.getElementById('onepack-product').checked;
+  document.getElementById('onepack-tip').style.display=on?'block':'none';
+  document.getElementById('product-rec-section').style.display=on?'block':'none';
+  if(!on){
+    document.getElementById('rec-results').innerHTML='';
+    document.getElementById('rec-status').textContent='';
+    S.approvedProducts=[];
+    S.lastRecs=null;
+  }
+}
+document.addEventListener('input',e=>{if(e.target.classList.contains('url-input'))checkUrlState();});
+
+// ── Product Recommendation (AI analyzes topic, suggests 2-3 products) ──
+async function recommendProducts(){
+  if(!S.apiKey){toast('請先輸入並儲存 API Key');return;}
+  const urls=getUrls();
+  const topicHint=urls.length?urls.join(' / '):(getContent()||'');
+  const btn=document.getElementById('rec-btn');
+  const statusEl=document.getElementById('rec-status');
+  const resultsEl=document.getElementById('rec-results');
+  btn.disabled=true;btn.innerHTML='<div class="spin" style="border-color:rgba(0,0,0,.2);border-top-color:var(--muted)"></div> 分析中...';
+  statusEl.textContent='';
+  resultsEl.innerHTML='';
+
+  const kb=getProductKBForPrompt();
+  const prompt=`你是 One Pack 大叔粉專的產品顧問。請分析以下文章主題，從產品資料庫中挑選 2-3 項「主題關聯性最高」的產品。
+
+文章主題／參考來源：${topicHint||'（請根據已選的主題類型判斷）'}
+
+產品資料庫：
+${kb}
+
+規則：
+- 只能從上面列出的產品中挑選，不可編造
+- 只挑真正主題相關的，不要硬湊
+- 如果完全沒有相關產品，回傳空陣列 []
+- 最多3項，最少0項
+
+請只輸出 JSON 陣列，格式如下，不要加任何說明文字、不要用 markdown code block：
+[{"id":"產品id","name":"產品名稱","reason":"15字以內，說明為何跟這篇主題相關"}]`;
+
+  try{
+    const raw=await callAPI(prompt);
+    let cleaned=raw.trim().replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'');
+    const recs=JSON.parse(cleaned);
+    S.lastRecs=recs;
+    if(!recs.length){
+      resultsEl.innerHTML='<div class="rec-none">這篇主題與產品關聯性低，建議不導入產品 — 純知識分享即可</div>';
+      statusEl.textContent='';
+    }else{
+      resultsEl.innerHTML=recs.map((r,i)=>`
+        <div class="rec-card" id="rec-card-${i}" onclick="toggleRecCard(${i})">
+          <div class="rec-card-hd">
+            <input type="checkbox" class="rec-checkbox" id="rec-cb-${i}" onclick="event.stopPropagation();toggleRecCard(${i})">
+            <span class="rec-name">${escText(r.name)}</span>
+          </div>
+          <div class="rec-reason">${escText(r.reason)}</div>
+        </div>`).join('');
+      statusEl.textContent='✓ 勾選想用的產品（可複選或不選），再點下方「生成貼文」';
+    }
+  }catch(e){
+    resultsEl.innerHTML=`<div class="rec-none">推薦失敗：${e.message==='no_key'?'請先儲存 API Key':e.message}</div>`;
+  }
+  btn.disabled=false;btn.innerHTML='🔍 分析主題並推薦相關產品';
+}
+
+function toggleRecCard(i){
+  const cb=document.getElementById('rec-cb-'+i);
+  const card=document.getElementById('rec-card-'+i);
+  cb.checked=!cb.checked;
+  card.classList.toggle('sel',cb.checked);
+  S.approvedProducts=(S.lastRecs||[]).filter((_,idx)=>document.getElementById('rec-cb-'+idx)?.checked);
+}
+
+
 
 // Topic type
 function stt(btn,type){
@@ -656,6 +822,33 @@ function mkPrompt(content,plat,tone,target,brand,rules,maxWords,urls,regen){
 要求：繁體中文，符合平台特性，結尾自然帶入「AI 飲食教練」CTA，只輸出貼文內容，不加說明${re}`;
 }
 
+function mkOnePackPrompt(baseText,includeProduct){
+  let productNote;
+  if(includeProduct){
+    const approved=S.approvedProducts||[];
+    if(approved.length){
+      const list=loadProducts();
+      const detail=approved.map(a=>{
+        const full=list.find(p=>p.id===a.id);
+        return full?`【${full.name}】成分:${full.key_ingredient}｜官方功效用語:${full.official_claim}｜適合:${full['for']}${full.caution?'｜注意:'+full.caution:''}`:`【${a.name}】${a.reason}`;
+      }).join('\n');
+      productNote=`${ONEPACK_PRODUCT_NOTE}\n\n【已核准使用的產品（只能用這些，從中挑1個最適合的自然帶入，不可使用其他產品，不可編造成分或效果）】\n${detail}`;
+    }else{
+      productNote='\n\n【關於產品】這篇不需要提及任何產品，純粹是健康知識分享。';
+    }
+  }else{
+    productNote='\n\n【關於產品】這篇不需要提及任何產品，純粹是健康知識分享。';
+  }
+  return `${ONEPACK_RULES}${productNote}
+
+以下是要改寫的原始內容（請完全重寫成 One Pack 大叔風格，不是潤飾，是徹底改寫）：
+───
+${baseText}
+───
+
+只輸出改寫後的最終貼文，不要加任何說明、不要保留原文、不要附註你做了什麼修改。`;
+}
+
 async function callAPI(prompt,img64){
   if(!S.apiKey)throw new Error('no_key');
   const msgs=img64
@@ -678,8 +871,14 @@ async function genPost(regen){
   const rules=document.getElementById('rules-txt').value;
   const maxW=document.getElementById('maxwords').value;
   const brand=`功能：${document.getElementById('bf')?.value||''}，用戶：${document.getElementById('ba')?.value||''}`;
+  const useOnePack = urls.length>0 && document.getElementById('onepack-toggle').checked;
+  const includeProduct = useOnePack && document.getElementById('onepack-product').checked;
+  if(includeProduct && !S.lastRecs){
+    toast('請先點「分析主題並推薦相關產品」');
+    return;
+  }
   const btn=document.getElementById('gbtn');
-  btn.disabled=true;btn.innerHTML='<div class="spin"></div> 生成中...';
+  btn.disabled=true;btn.innerHTML='<div class="spin"></div> 生成中...'+(useOnePack?'（套用 One Pack 大叔規範）':'');
   document.getElementById('ow').style.display='block';
 
   try{
@@ -693,23 +892,31 @@ async function genPost(regen){
       const labels=['otxt-t','otxt-i','otxt-f'];
       const cbIds=['cb-t','cb-i','cb-f'];
       for(let i=0;i<3;i++){
-        const txt=await callAPI(mkPrompt(content,platsList[i],S.tone,S.target,brand,rules,{threads:200,ig:300,fb:400}[platsList[i]],urls,regen),S.img64);
+        let txt=await callAPI(mkPrompt(content,platsList[i],S.tone,S.target,brand,rules,{threads:200,ig:300,fb:400}[platsList[i]],urls,regen),S.img64);
+        if(useOnePack){
+          document.getElementById(labels[i]).textContent='套用 One Pack 大叔規範改寫中...';
+          txt=await callAPI(mkOnePackPrompt(txt,includeProduct));
+        }
         document.getElementById(labels[i]).textContent=txt;
         document.getElementById(cbIds[i]).textContent=txt.length+'字';
         S.curOuts[platsList[i]]=txt;
         if(i<2)document.getElementById(labels[i+1]).textContent='生成中...';
       }
-      document.getElementById('otip').textContent='💡 三個版本已生成，各自複製到對應平台';
+      document.getElementById('otip').textContent=useOnePack?'💡 已套用 One Pack 大叔風格改寫（三平台）':'💡 三個版本已生成，各自複製到對應平台';
     }else{
       document.getElementById('single-out').style.display='block';
       document.getElementById('triple-out').style.display='none';
       document.getElementById('otxt').textContent='分析中...';
-      const txt=await callAPI(mkPrompt(content,S.plat,S.tone,S.target,brand,rules,maxW,urls,regen),S.img64);
+      let txt=await callAPI(mkPrompt(content,S.plat,S.tone,S.target,brand,rules,maxW,urls,regen),S.img64);
+      if(useOnePack){
+        document.getElementById('otxt').textContent='套用 One Pack 大叔規範改寫中...';
+        txt=await callAPI(mkOnePackPrompt(txt,includeProduct));
+      }
       S.curOut=txt;
       document.getElementById('otxt').textContent=txt;
       document.getElementById('cb').textContent=txt.length+'字';
-      document.getElementById('out-plat-label').textContent={threads:'Threads 貼文',ig:'Instagram 貼文',fb:'Facebook 貼文'}[S.plat]||'貼文';
-      document.getElementById('otip').textContent=TIPS[S.target]||'';
+      document.getElementById('out-plat-label').textContent=(useOnePack?'One Pack 大叔｜':'')+({threads:'Threads 貼文',ig:'Instagram 貼文',fb:'Facebook 貼文'}[S.plat]||'貼文');
+      document.getElementById('otip').textContent=useOnePack?(includeProduct?('✓ 已套用大叔風格'+(S.approvedProducts.length?'，導入：'+S.approvedProducts.map(p=>p.name).join('、'):'，本次未核准任何產品，純知識分享')):'✓ 已套用大叔風格，純知識分享無產品'):(TIPS[S.target]||'');
       S.stats[S.plat]=(S.stats[S.plat]||0)+1;
       S.stats.total=(S.stats.total||0)+1;
       localStorage.setItem('stats',JSON.stringify(S.stats));updStats();
@@ -722,9 +929,15 @@ async function genPost(regen){
 }
 
 function cpOut(){if(S.curOut)cp(S.curOut,'已複製 ✓');}
-function savePost(){if(!S.curOut)return;addH({text:S.curOut,type:S.tt,target:S.target,plat:S.plat});toast('已存入紀錄 ✓');}
+function savePost(){
+  if(!S.curOut)return;
+  const useOnePack = getUrls().length>0 && document.getElementById('onepack-toggle').checked;
+  addH({text:S.curOut,type:S.tt,target:S.target,plat:S.plat,onepack:useOnePack});
+  toast('已存入紀錄 ✓');
+}
 function saveAllPosts(){
-  ['threads','ig','fb'].forEach(p=>{if(S.curOuts[p])addH({text:S.curOuts[p],type:S.tt,target:S.target,plat:p});});
+  const useOnePack = getUrls().length>0 && document.getElementById('onepack-toggle').checked;
+  ['threads','ig','fb'].forEach(p=>{if(S.curOuts[p])addH({text:S.curOuts[p],type:S.tt,target:S.target,plat:p,onepack:useOnePack});});
   toast('三平台貼文已存入紀錄 ✓');
 }
 
@@ -856,9 +1069,95 @@ function renderHist(){
   if(!S.hist.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">還沒有紀錄，生成後點「存入紀錄」</p>';return;}
   const platColor={threads:['#EAF4EE','#0F3D22'],ig:['#FCE4EC','#880E4F'],fb:['#E3F2FD','#0D47A1']};
   const platLabel={threads:'Threads',ig:'IG',fb:'FB'};
-  el.innerHTML=S.hist.map(h=>{const tc2=TC[h.type]||TC.food,pc=platColor[h.plat]||platColor.threads;return `<div class="tc" onclick="cp('${h.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}','已複製 ✓')"><div class="tcm"><span class="tag" style="background:${tc2[0]};color:${tc2[1]}">${TOPICS[h.type]?.name||'貼文'}</span><span class="tag" style="background:${pc[0]};color:${pc[1]}">${platLabel[h.plat]||''}</span>${h.day?`<span class="tag" style="background:var(--bg);color:var(--muted)">${h.day}</span>`:''}<span style="font-size:11px;color:var(--hint);margin-left:auto">${h.time}</span></div><div class="tcb">${h.text.replace(/</g,'&lt;')}</div></div>`;}).join('');
+  el.innerHTML=S.hist.map(h=>{const tc2=TC[h.type]||TC.food,pc=platColor[h.plat]||platColor.threads;const opBadge=h.onepack?`<span class="tag" style="background:#1A1A1A;color:#F5C842">🧔 One Pack</span>`:'';return `<div class="tc" onclick="cp('${h.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}','已複製 ✓')"><div class="tcm"><span class="tag" style="background:${tc2[0]};color:${tc2[1]}">${TOPICS[h.type]?.name||'貼文'}</span><span class="tag" style="background:${pc[0]};color:${pc[1]}">${platLabel[h.plat]||''}</span>${opBadge}${h.day?`<span class="tag" style="background:var(--bg);color:var(--muted)">${h.day}</span>`:''}<span style="font-size:11px;color:var(--hint);margin-left:auto">${h.time}</span></div><div class="tcb">${h.text.replace(/</g,'&lt;')}</div></div>`;}).join('');
 }
 function clearH(){if(!confirm('確定清除？'))return;S.hist=[];localStorage.removeItem('hist');renderHist();toast('已清除');}
+
+// ── Product Knowledge Base ──
+function loadProducts(){
+  const saved=localStorage.getItem('product_kb');
+  return saved?JSON.parse(saved):JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+}
+function saveProducts(list){localStorage.setItem('product_kb',JSON.stringify(list));}
+function resetProducts(){if(!confirm('還原為官方手冊資料？這會覆蓋你目前的編輯。'))return;localStorage.removeItem('product_kb');renderProducts();toast('已還原官方資料 ✓');}
+
+function renderProducts(){
+  const list=loadProducts();
+  const q=(document.getElementById('prod-search')?.value||'').trim().toLowerCase();
+  const filtered=q?list.filter(p=>JSON.stringify(p).toLowerCase().includes(q)):list;
+  const el=document.getElementById('products-list');
+  if(!filtered.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:10px 0">沒有符合的產品</p>';return;}
+  el.innerHTML=filtered.map((p,idx)=>{
+    const realIdx=list.indexOf(p);
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <div style="flex:1">
+          <input type="text" value="${escAttr(p.name)}" onchange="updProduct(${realIdx},'name',this.value)" style="font-size:14px;font-weight:600;border:none;padding:2px 0;background:none" placeholder="產品名稱">
+          <input type="text" value="${escAttr(p.cat)}" onchange="updProduct(${realIdx},'cat',this.value)" style="font-size:11px;color:var(--muted);border:none;padding:2px 0;background:none;margin-top:2px" placeholder="產品類別">
+        </div>
+        <button class="rm-btn" onclick="delProduct(${realIdx})" title="刪除">✕</button>
+      </div>
+      <div style="margin-bottom:6px">
+        <label style="font-size:11px;color:var(--hint);font-weight:600">主要成分</label>
+        <input type="text" value="${escAttr(p.key_ingredient)}" onchange="updProduct(${realIdx},'key_ingredient',this.value)" style="font-size:12px">
+      </div>
+      <div style="margin-bottom:6px">
+        <label style="font-size:11px;color:var(--hint);font-weight:600">官方核可功效用語（公開貼文可用）</label>
+        <textarea rows="2" onchange="updProduct(${realIdx},'official_claim',this.value)" style="font-size:12px">${escText(p.official_claim||'')}</textarea>
+      </div>
+      <div class="g2" style="margin-bottom:0">
+        <div>
+          <label style="font-size:11px;color:var(--hint);font-weight:600">適合對象</label>
+          <input type="text" value="${escAttr(p['for']||'')}" onchange="updProduct(${realIdx},'for',this.value)" style="font-size:12px">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--hint);font-weight:600">注意事項</label>
+          <input type="text" value="${escAttr(p.caution||'')}" onchange="updProduct(${realIdx},'caution',this.value)" style="font-size:12px">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updProduct(idx,key,val){
+  const list=loadProducts();
+  if(!list[idx])return;
+  list[idx][key]=val;
+  saveProducts(list);
+}
+function delProduct(idx){
+  if(!confirm('確定刪除這項產品？'))return;
+  const list=loadProducts();
+  list.splice(idx,1);
+  saveProducts(list);
+  renderProducts();
+  toast('已刪除 ✓');
+}
+function addProduct(){
+  const list=loadProducts();
+  list.unshift({id:'custom_'+Date.now(),name:'新產品名稱',cat:'',key_ingredient:'',official_claim:'',for:'',caution:''});
+  saveProducts(list);
+  renderProducts();
+  toast('已新增，請填寫內容 ✓');
+}
+function exportProducts(){
+  const list=loadProducts();
+  const txt=JSON.stringify(list,null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(txt);
+  a.download='product_kb_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.json';
+  a.click();
+  toast('已匯出 ✓');
+}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function escText(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+// Build a compact product summary string for prompt injection
+function getProductKBForPrompt(){
+  const list=loadProducts();
+  return list.map(p=>`【${p.name}】類別:${p.cat}｜成分:${p.key_ingredient}｜官方功效用語:${p.official_claim}｜適合:${p['for']}${p.caution?'｜注意:'+p.caution:''}`).join('\n');
+}
+
 function exportAll(){const txt=S.hist.map(h=>`[${h.time}][${h.plat||''}] ${TOPICS[h.type]?.name||''}\n${h.text}`).join('\n\n───\n\n');const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);a.download='posts_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.txt';a.click();toast('匯出完成 ✓');}
 
 // Utils
