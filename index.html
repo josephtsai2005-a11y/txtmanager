@@ -137,14 +137,47 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
 /* ─── PANEL (side drawer on desktop, modal on mobile) ─── */
 .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:100;display:none}
 .panel-overlay.open{display:block}
-.panel{position:fixed;right:0;top:0;bottom:0;width:520px;background:var(--card);
+.panel{position:fixed;right:0;top:0;bottom:0;width:720px;background:var(--card);
   border-left:1px solid var(--border);z-index:101;display:flex;flex-direction:column;
   transform:translateX(100%);transition:transform .25s ease;overflow:hidden;box-shadow:var(--shadow-md)}
 .panel.open{transform:translateX(0)}
-.panel-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
 .panel-title{font-size:15px;font-weight:700;flex:1}
 .panel-body{flex:1;overflow-y:auto;padding:18px}
-.panel-foot{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px}
+.panel-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+
+/* ─── EDITOR ─── */
+.editor-toolbar{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:var(--bg);
+  border:1px solid var(--border);border-bottom:none;border-radius:var(--rs) var(--rs) 0 0}
+.editor-toolbar button{padding:4px 8px;border-radius:5px;border:1px solid transparent;
+  background:none;cursor:pointer;font-size:13px;color:var(--muted);font-family:inherit;
+  transition:all .1s;line-height:1}
+.editor-toolbar button:hover{background:var(--card);border-color:var(--border);color:var(--text)}
+.editor-toolbar button.active{background:var(--card);border-color:var(--border);color:var(--green);font-weight:700}
+.editor-toolbar .sep{width:1px;background:var(--border);margin:2px 3px;flex-shrink:0}
+.editor-content{border:1px solid var(--border);border-radius:0 0 var(--rs) var(--rs);
+  padding:12px 14px;min-height:200px;font-size:14px;line-height:1.9;color:var(--text);
+  outline:none;white-space:pre-wrap;word-break:break-word;background:var(--card);
+  font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang TC',sans-serif}
+.editor-content:focus{border-color:var(--green)}
+.editor-content b,.editor-content strong{font-weight:700}
+.editor-wc{font-size:11px;color:var(--hint);text-align:right;margin-top:4px}
+
+/* ─── EMOJI PICKER ─── */
+.emoji-picker{position:absolute;z-index:200;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:10px;box-shadow:var(--shadow-md);width:320px;display:none}
+.emoji-picker.open{display:block}
+.emoji-cats{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.emoji-cat-btn{padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:none;
+  cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+.emoji-cat-btn.on{background:var(--gbg);color:var(--gtxt);border-color:var(--gborder)}
+.emoji-search{width:100%;border:1px solid var(--border);border-radius:6px;padding:5px 8px;
+  font-size:12px;font-family:inherit;margin-bottom:8px;background:var(--bg)}
+.emoji-search:focus{outline:none;border-color:var(--green)}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:180px;overflow-y:auto}
+.emoji-btn{padding:5px;border-radius:5px;border:none;background:none;cursor:pointer;
+  font-size:18px;line-height:1;text-align:center;transition:background .1s}
+.emoji-btn:hover{background:var(--gbg)}
 
 /* ─── TABS ─── */
 .tab-row{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:0}
@@ -545,6 +578,12 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   </div>
   <div class="panel-body" id="panel-body">
     <!-- dynamic content injected by JS -->
+  </div>
+  <!-- Emoji Picker (shared, positioned absolutely) -->
+  <div class="emoji-picker" id="emoji-picker">
+    <div class="emoji-cats" id="emoji-cats"></div>
+    <input class="emoji-search" id="emoji-search" placeholder="搜尋 emoji..." oninput="filterEmoji()">
+    <div class="emoji-grid" id="emoji-grid"></div>
   </div>
   <div class="panel-foot" id="panel-foot">
     <button class="btn btn-primary" style="flex:1;justify-content:center" id="panel-gen-btn" onclick="panelGen()">
@@ -1111,26 +1150,58 @@ function openPanel(dateKey){
       </select>
     </div>
     ${data.text ? `
-    <div style="margin-bottom:12px">
+    <div style="margin-top:4px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <label class="field-label" style="margin-bottom:0">已生成貼文草稿</label>
-        <span style="font-size:11px;color:var(--hint)">${[...data.text].length} 字</span>
+        <label class="field-label" style="margin-bottom:0;color:var(--green);font-weight:700">✓ 已生成貼文草稿（可直接編輯）</label>
+        <span class="editor-wc" id="p-wc" style="margin:0">${[...data.text].length} 字</span>
       </div>
-      <div class="out-box" style="max-height:180px;overflow-y:auto;font-size:13px">${esc(data.text)}</div>
-      <div class="brow">
-        <button class="btn btn-green btn-sm" onclick="cp(G.calData['${dateKey}'].text,'已複製 ✓')">⧉ 複製</button>
-        <button class="btn btn-sm" onclick="addHist({text:G.calData['${dateKey}'].text,type:G.calData['${dateKey}'].type||'food',plat:G.calData['${dateKey}'].plat||'threads',style:G.calData['${dateKey}'].style||'news'});toast('已存入紀錄 ✓')">↓ 存入紀錄</button>
-        <button class="btn btn-sm" style="color:var(--red)" onclick="if(confirm('清除這格的貼文草稿？')){delete G.calData['${dateKey}'].text;localStorage.setItem('cal_v2',JSON.stringify(G.calData));renderCal();document.getElementById('panel-body').innerHTML='';openPanel('${dateKey}')}">✕ 清除草稿</button>
+      <div class="editor-toolbar">
+        <button onclick="edCmd('bold')" title="粗體"><b>B</b></button>
+        <button onclick="edCmd('italic')" title="斜體"><i>I</i></button>
+        <div class="sep"></div>
+        <button onclick="edInsert('\\n')" title="換行">↵</button>
+        <button onclick="edInsert('\\n\\n')" title="空行">¶</button>
+        <div class="sep"></div>
+        <button onclick="edInsert('1️⃣ ')" title="1️⃣">1️⃣</button>
+        <button onclick="edInsert('2️⃣ ')" title="2️⃣">2️⃣</button>
+        <button onclick="edInsert('3️⃣ ')" title="3️⃣">3️⃣</button>
+        <button onclick="edInsert('✅ ')" title="✅">✅</button>
+        <button onclick="edInsert('❌ ')" title="❌">❌</button>
+        <button onclick="edInsert('👇 ')" title="👇">👇</button>
+        <button onclick="edInsert('🔥 ')" title="🔥">🔥</button>
+        <button onclick="edInsert('💡 ')" title="💡">💡</button>
+        <button onclick="edInsert('📊 ')" title="📊">📊</button>
+        <button onclick="edInsert('⚠️ ')" title="⚠️">⚠️</button>
+        <div class="sep"></div>
+        <button onclick="toggleEmojiPicker(event)" title="更多 emoji" id="emoji-toggle-btn">😊 更多</button>
+        <div class="sep"></div>
+        <button onclick="edInsert('${COACH_URL}')" title="插入教練連結" style="font-size:11px">🔗 連結</button>
+        <button onclick="edInsert('#OnePack大叔 #211餐盤 #代謝優化')" style="font-size:11px"># 標籤</button>
+      </div>
+      <div class="editor-content" id="p-editor" contenteditable="true"
+        oninput="onEditorInput('${dateKey}')"
+        onkeydown="onEditorKey(event)"
+        spellcheck="false">${esc(data.text)}</div>
+      <div class="editor-wc" id="p-wc-bar"></div>
+      <div class="brow" style="margin-top:8px">
+        <button class="btn btn-green btn-sm" onclick="cpEditor()">⧉ 複製</button>
+        <button class="btn btn-sm" onclick="saveEditorToHist('${dateKey}')">↓ 存入紀錄</button>
+        <button class="btn btn-sm" onclick="regenPanel()">↻ 重新生成</button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="clearPanelDraft('${dateKey}')">✕ 清除</button>
       </div>
     </div>` : ''}`;
 
+function closePanel(){
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('panel').classList.add('open');
+  if(data.text) setTimeout(()=>updateEditorWc(), 50);
+  initEmojiPicker();
 }
 
 function closePanel(){
   document.getElementById('panel-overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
+  document.getElementById('emoji-picker').classList.remove('open');
   G.panelDate = null;
 }
 
@@ -1447,6 +1518,183 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escText(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+// ═══════════════════════════════════════════════
+//  EDITOR FUNCTIONS
+// ═══════════════════════════════════════════════
+function getEditor(){ return document.getElementById('p-editor'); }
+
+function edCmd(cmd){
+  const ed = getEditor(); if(!ed) return;
+  ed.focus();
+  document.execCommand(cmd, false, null);
+}
+
+function edInsert(text){
+  const ed = getEditor(); if(!ed) return;
+  ed.focus();
+  const sel = window.getSelection();
+  if(sel.rangeCount){
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    // Insert as text node to avoid HTML injection
+    const lines = text.split('\n');
+    lines.forEach((line, i) => {
+      if(i > 0) range.insertNode(document.createElement('br'));
+      if(line) range.insertNode(document.createTextNode(line));
+    });
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else {
+    ed.textContent += text;
+  }
+  onEditorInput(G.panelDate);
+}
+
+function onEditorKey(e){
+  // Allow normal Enter (creates <br> in contenteditable)
+  // Prevent Ctrl+B/I from conflicting
+}
+
+function onEditorInput(dateKey){
+  updateEditorWc();
+  if(!dateKey || !G.calData[dateKey]) return;
+  // Auto-save text back to calData
+  const ed = getEditor(); if(!ed) return;
+  G.calData[dateKey].text = ed.innerText;
+  localStorage.setItem('cal_v2', JSON.stringify(G.calData));
+}
+
+function updateEditorWc(){
+  const ed = getEditor(); if(!ed) return;
+  const wc = [...ed.innerText].length;
+  const bar = document.getElementById('p-wc-bar');
+  if(bar) bar.textContent = `${wc} 字`;
+  const top = document.getElementById('p-wc');
+  if(top) top.textContent = `${wc} 字`;
+}
+
+function cpEditor(){
+  const ed = getEditor();
+  if(!ed){ toast('找不到編輯器'); return; }
+  cp(ed.innerText, '已複製 ✓');
+}
+
+function saveEditorToHist(dateKey){
+  const ed = getEditor(); if(!ed) return;
+  const data = G.calData[dateKey]||{};
+  addHist({text: ed.innerText, type: data.type||'food', plat: data.plat||'threads', style: data.style||'news'});
+  toast('已存入紀錄 ✓');
+}
+
+function regenPanel(){
+  if(confirm('重新生成會覆蓋目前草稿，確定嗎？')) panelGen();
+}
+
+function clearPanelDraft(dateKey){
+  if(!confirm('清除這格的貼文草稿？')) return;
+  if(G.calData[dateKey]) delete G.calData[dateKey].text;
+  localStorage.setItem('cal_v2', JSON.stringify(G.calData));
+  renderCal();
+  openPanel(dateKey);
+}
+
+// ═══════════════════════════════════════════════
+//  EMOJI PICKER
+// ═══════════════════════════════════════════════
+const EMOJI_DATA = {
+  '常用': ['😊','😄','🔥','💪','✅','❌','👇','👆','⭐','💡','📊','⚠️','🎯','❓','💬','🙏','👍','🤔','😮','😅'],
+  '食物健康': ['🥗','🍱','🥩','🍳','🥦','🥕','🍎','🥑','🫐','🍇','🧃','💊','🩺','🏃','🧘','💊','🫀','🧠','🦷','💉'],
+  '數字符號': ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔴','🟡','🟢','🔵','⚡','✨','💥','🌟','📌','📍'],
+  '表情': ['😀','😂','🥲','😍','🤩','😎','🧐','🤓','😤','😩','🥺','😱','🤯','😴','🤗','🫶','💖','💯','🎉','🏆'],
+  '生活': ['📱','💻','🏠','🚗','✈️','⏰','📅','🗓️','📝','✏️','🔑','💰','📈','📉','🎓','🏋️','🛒','☕','🍵','🌙'],
+};
+
+let emojiCurrentCat = '常用';
+let emojiSaveRange = null;
+
+function initEmojiPicker(){
+  const picker = document.getElementById('emoji-picker');
+  if(!picker || picker.dataset.init) return;
+  picker.dataset.init = '1';
+
+  // Categories
+  document.getElementById('emoji-cats').innerHTML = Object.keys(EMOJI_DATA).map(cat =>
+    `<button class="emoji-cat-btn${cat===emojiCurrentCat?' on':''}" onclick="selectEmojiCat('${cat}',this)">${cat}</button>`
+  ).join('');
+
+  renderEmojiGrid(emojiCurrentCat);
+}
+
+function selectEmojiCat(cat, btn){
+  emojiCurrentCat = cat;
+  document.querySelectorAll('.emoji-cat-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('emoji-search').value = '';
+  renderEmojiGrid(cat);
+}
+
+function renderEmojiGrid(cat, filter=''){
+  const emojis = filter
+    ? Object.values(EMOJI_DATA).flat().filter(e => e.includes(filter))
+    : (EMOJI_DATA[cat] || []);
+  document.getElementById('emoji-grid').innerHTML = emojis.map(e =>
+    `<button class="emoji-btn" onclick="insertEmoji('${e}')" title="${e}">${e}</button>`
+  ).join('');
+}
+
+function filterEmoji(){
+  const q = document.getElementById('emoji-search').value;
+  if(q) renderEmojiGrid('', q);
+  else renderEmojiGrid(emojiCurrentCat);
+}
+
+function toggleEmojiPicker(e){
+  e.stopPropagation();
+  const picker = document.getElementById('emoji-picker');
+  const btn = document.getElementById('emoji-toggle-btn');
+  const isOpen = picker.classList.contains('open');
+
+  if(!isOpen){
+    // Save current selection before picker opens
+    const sel = window.getSelection();
+    if(sel.rangeCount) emojiSaveRange = sel.getRangeAt(0).cloneRange();
+    // Position near button
+    const rect = btn.getBoundingClientRect();
+    const panelRect = document.getElementById('panel').getBoundingClientRect();
+    picker.style.top = (rect.bottom - panelRect.top + 4) + 'px';
+    picker.style.left = Math.max(8, rect.left - panelRect.left - 160) + 'px';
+  }
+  picker.classList.toggle('open', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+  if(!isOpen) initEmojiPicker();
+}
+
+function insertEmoji(emoji){
+  const ed = getEditor(); if(!ed) return;
+  ed.focus();
+  // Restore saved selection
+  if(emojiSaveRange){
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(emojiSaveRange);
+  }
+  edInsert(emoji);
+  // Keep saved range updated
+  const sel = window.getSelection();
+  if(sel.rangeCount) emojiSaveRange = sel.getRangeAt(0).cloneRange();
+}
+
+// Close emoji picker on outside click
+document.addEventListener('click', e=>{
+  const picker = document.getElementById('emoji-picker');
+  const btn = document.getElementById('emoji-toggle-btn');
+  if(picker && !picker.contains(e.target) && e.target !== btn){
+    picker.classList.remove('open');
+    if(btn) btn.classList.remove('active');
+  }
+});
+
 </script>
 </body>
 </html>
