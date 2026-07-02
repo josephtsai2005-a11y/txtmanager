@@ -1191,7 +1191,6 @@ function openPanel(dateKey){
       </div>
     </div>` : ''}`;
 
-function closePanel(){
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('panel').classList.add('open');
   if(data.text) setTimeout(()=>updateEditorWc(), 50);
@@ -1201,7 +1200,8 @@ function closePanel(){
 function closePanel(){
   document.getElementById('panel-overlay').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
-  document.getElementById('emoji-picker').classList.remove('open');
+  const ep = document.getElementById('emoji-picker');
+  if(ep) ep.classList.remove('open');
   G.panelDate = null;
 }
 
