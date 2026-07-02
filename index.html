@@ -326,7 +326,8 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
       <div class="card-title">發布平台</div>
       <div class="chip-group" id="plat-chips">
         <button class="chip on" onclick="selChip(this,'plat','threads')">Threads</button>
-        <button class="chip" onclick="selChip(this,'plat','fb')">FB + IG</button>
+        <button class="chip" onclick="selChip(this,'plat','ig')">Instagram</button>
+        <button class="chip" onclick="selChip(this,'plat','fb')">Facebook</button>
         <button class="chip" onclick="selChip(this,'plat','all')">三平台同步</button>
       </div>
     </div>
@@ -364,9 +365,32 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
       </div>
     </div>
 
+    <!-- Tone -->
+    <div class="card">
+      <div class="card-title">說話口氣 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">WHO — 用什麼身份說話</span></div>
+      <div class="opt-grid cols2" id="tone-grid">
+        <button class="opt-btn on" onclick="selOpt(this,'tone','uncle')">
+          <span class="ob-title">🧔 經驗大叔</span>
+          <span class="ob-sub">老大哥說話，直接務實，帶點權威但親切</span>
+        </button>
+        <button class="opt-btn" onclick="selOpt(this,'tone','energetic')">
+          <span class="ob-title">⚡ 熱情活力</span>
+          <span class="ob-sub">充滿幹勁，正向積極，讓人感覺有衝勁</span>
+        </button>
+        <button class="opt-btn" onclick="selOpt(this,'tone','edu')">
+          <span class="ob-title">🎓 深度教育</span>
+          <span class="ob-sub">引用數據和研究，條理清晰，像專業營養師</span>
+        </button>
+        <button class="opt-btn" onclick="selOpt(this,'tone','humor')">
+          <span class="ob-title">😄 幽默風趣</span>
+          <span class="ob-sub">輕鬆自嘲，讓人會心一笑又能學到東西</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Style -->
     <div class="card">
-      <div class="card-title">敘事風格</div>
+      <div class="card-title">敘事風格 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">HOW — 用什麼結構說故事</span></div>
       <div class="opt-grid cols2" id="style-grid">
         <button class="opt-btn on" onclick="selOpt(this,'style','news')">
           <span class="ob-title">📰 新聞引用型</span>
@@ -545,47 +569,67 @@ const BRAND_PROFILE = {
 };
 
 const PLAT_SPEC = {
-  threads: { label:'Threads', chars:220, desc:'Threads 平台：180–220字，短段落有力，hashtag 3–5個放最後，開頭第一句要有衝擊性鉤子，用語接地氣，結尾一定引導到 AI 飲食教練試用連結' },
-  fb: { label:'FB + IG', chars:400, desc:'Facebook 個人頁面（同步 IG）：350–450字，完整敘事，故事感，像跟朋友說話，結尾引導到 FB follower 和 AI 教練連結，hashtag 3–5個' },
+  threads: { label:'Threads', chars:220, desc:'Threads 平台：180–220字，短段落有力，hashtag 3–5個放最後，開頭第一句要有衝擊性鉤子，用語接地氣，結尾引導到 AI 飲食教練試用連結' },
+  ig: { label:'Instagram', chars:300, desc:'Instagram 貼文：200–300字，生活風格感，適合搭配食物照片，加上換行與空白行增加易讀性，hashtag 10–15個放最後（分兩行），結尾引導到個人簡介連結（AI 教練）' },
+  fb: { label:'Facebook', chars:450, desc:'Facebook 個人頁面：380–450字，完整敘事，故事感，像跟朋友說話，引發留言互動，結尾引導 follower 和 AI 教練連結，hashtag 3–5個' },
   all: { label:'三平台', chars:300, desc:'' },
+};
+
+const TONE_PROMPT = {
+  uncle: `【說話口氣：經驗大叔】
+像一個走過江湖的老大哥在分享親身體悟——說話直接、務實、帶點權威感但不高傲。
+會說「大叔跟你說實話...」「我見過太多人這樣...」「這個坑大叔也踩過」。
+有溫度、有同理心，讓人覺得是「真的在為你著想的前輩」，不是在賣東西。`,
+  energetic: `【說話口氣：熱情活力】
+充滿幹勁和正能量，讓人讀完就想立刻行動。
+語氣積極進取，善用感嘆號，帶動氣氛，讓讀者覺得「這件事我也辦得到！」。
+適合鼓勵性內容，強調「開始改變永遠不嫌晚」，傳遞希望和動力。`,
+  edu: `【說話口氣：深度教育】
+像一位擁有豐富臨床經驗的營養師在上課——引用具體數據、研究來源、生化機制。
+邏輯清晰、條理分明，讓讀者覺得「這個人真的很懂」。
+不用艱深術語，但不迴避專業概念，會把複雜概念用精準的比喻說清楚。`,
+  humor: `【說話口氣：幽默風趣】
+用輕鬆幽默的方式切入，適當自嘲，讓人看了會心一笑。
+可以用誇張比喻、反諷、或把健康知識包裝成有趣的觀察。
+但幽默是服務於內容的——笑完之後讀者要記住一個有用的知識點，不是只有笑。`,
 };
 
 const STYLE_PROMPT = {
   news: `【敘事風格：新聞引用型】
-開頭必須引用一個具體來源（媒體名稱、研究機構、知名人士名字）或最新數據當鉤子，讓讀者覺得「這是有根據的」。
-中間論點之間用完整的過渡句承接，不要條列完就跳，每個論點要解釋「這對我有什麼影響」。
-整篇文章有完整的起承轉合，讀起來像一篇有觀點的短文，不像筆記。`,
+開頭必須引用一個具體來源（媒體名稱如《紐約時報》、研究機構、知名人士名字）或最新數據當鉤子，讓讀者覺得「這是有根據的」。
+中間論點之間用完整的過渡句承接，不要條列完就直接跳下一點——每個論點要解釋「這對我有什麼實際影響」。
+整篇有完整起承轉合，讀起來像一篇有觀點的短文，不像筆記或條列清單。`,
   story: `【敘事風格：故事敘事型】
-用第一人稱「大叔」視角切入，從一個具體生活場景或對話開始（例如：昨天在診間遇到一個學員...）。
-用生活化比喻把複雜概念說清楚（例如：腎臟就像污水處理廠...）。
-整篇要有起承轉合，結尾回扣開頭的情境，有完整感。`,
+從一個具體的生活場景或真實對話開始（例如：昨天有個學員問我...／上週在超商看到一個媽媽...）。
+中間用生活化比喻把複雜概念說清楚，讓讀者有「原來如此」的頓悟感。
+整篇有完整起承轉合，結尾回扣開頭的情境或人物，有收尾感。`,
   list: `【敘事風格：條列重點型】
-開頭一句話點出核心問題，接著用 1️⃣2️⃣3️⃣ 條列，每個條列點 2–3 句說完，點與點之間用一句話承接。
-善用粗體標出關鍵詞，方便快速掃讀。但條列完不能直接跳結尾，要有一小段「大叔碎碎念」做總結。`,
+開頭一句話點出核心問題或驚人事實，接著用 1️⃣2️⃣3️⃣ 條列主要論點。
+每個條列點 2–3 句說完，點與點之間用一句話做承接，不能直接跳。
+條列結束後必須有一段「大叔碎碎念」做整體總結，再接 CTA，不能直接結束。`,
   contrast: `【敘事風格：對比反差型】
-開頭先呈現「大家以為是這樣」的普遍認知（設定靶），
-中間轉折：「但真相是...」用具體數據或研究打臉。
-結尾給正確的行動建議，明確告訴讀者「所以你應該...」，形成清楚的前後對比。`,
+開頭先呈現「大家普遍以為是這樣」的認知（設定靶，讓讀者產生共鳴）。
+中間明確轉折：「但真相是...」——用具體數據或研究打臉這個普遍認知。
+結尾給出正確的行動建議，明確告訴讀者「所以你應該做的是...」，形成清楚的前後對比。`,
 };
 
 const GOAL_PROMPT = {
   acquire: `【發文目標：開發 AI 飲食教練用戶】結尾的 CTA 必須明確引導讀者試用 AI 飲食教練：「👇 免費試用 AI 飲食教練：${COACH_URL}」，語氣是「我研發了這個工具幫你解決這個問題」`,
   brand: `【發文目標：OnePack 大叔品牌曝光】強調大叔的身份標籤（AI 飲食教練研發者、OnePack、211 餐盤），結尾可帶 AI 教練連結但不強迫，重點是讓讀者記住這個 IP`,
-  engage: `【發文目標：引發互動留言】結尾用一個具體問題引導讀者留言（例如：你一天吃幾克蛋白質？你的 BUN 值是多少？），這個問題要讓讀者很容易回答，不需要多想。順帶提及 AI 教練。`,
-  vendor: `【發文目標：版主留言】這是要貼在食物/便當/美食版主的留言區的內容。開頭先真誠讚美這道食物的賣相或料理方式（2句），再提供這道食物的大概營養估算（熱量、蛋白質），最後自然帶入「最近在用 AI 飲食教練分析，這種搭配很值得參考」。語氣是路過的朋友，不是推銷員。`,
+  engage: `【發文目標：引發互動留言】結尾用一個具體、容易回答的問題引導讀者留言（例如：你一天吃幾克蛋白質？你的健檢 BUN 值是多少？），讀者不需要多想就能留言。順帶提及 AI 教練。`,
+  vendor: `【發文目標：版主留言】這是要貼在食物/便當/美食版主留言區的內容。開頭先真誠讚美料理的賣相或用心（2句），再提供這道食物的大概營養估算（熱量、蛋白質），最後自然帶入「最近在用 AI 飲食教練分析外食，這種搭配很值得參考」。語氣是路過的朋友，不是推銷員。`,
 };
 
 const ONEPACK_BASE = `你是「OnePack 大叔」——一位研發 AI 飲食教練的健康管理顧問，同時也在 Threads / FB / IG 經營個人 IP。
 
-品牌核心關鍵字（可自然帶入）：211 餐盤、哈佛餐盤、降低發炎、改善代謝、高營養密度、代謝優化、排氨燃脂、從紅字轉黑字
+品牌核心關鍵字（可自然帶入，不要全部塞進去，挑 1–2 個最相關的）：
+211 餐盤、哈佛餐盤、降低發炎、改善代謝、高營養密度、代謝優化、排氨燃脂、從紅字轉黑字
 
-語調規範（必須遵守）：
-- 溫暖有同理心，帶點幽默的「大叔」視角，說話直接務實
-- 把複雜的醫學/生化概念轉成生活比喻（腎臟=污水廠、肝臟=清運工廠、燃脂=齒輪...）
+固定規範（不論口氣和風格，以下都必須遵守）：
 - 嚴格避免語助詞（喔、啊、囉、呢）
-- 有數據的地方一定要用數據，不能含糊其辭
+- 有數據的地方一定要給出數字，不能含糊說「有研究指出」沒有來源
 - 繁體中文，台灣在地語境
-- 只輸出貼文本體，不要加任何說明或前言`;
+- 只輸出貼文本體，不要加任何前言或說明`;
 
 const TOPICS_DEF = {
   food:{ name:'食物分析', icon:'🍱', col:'#EAF4EE', tc:'#0F3D22' },
@@ -621,6 +665,7 @@ const G = {
   apiKey: localStorage.getItem('ak') || '',
   plat: 'threads',
   type: 'food',
+  tone: 'uncle',
   style: 'news',
   goal: 'acquire',
   curOut: '',
@@ -689,9 +734,9 @@ function selChip(btn, key, val){
   G[key] = val;
   // Platform adjustment
   if(key==='plat'){
-    const wm = {threads:220, fb:400, all:300};
-    document.getElementById('maxwords').value = wm[val];
-    document.getElementById('mw-val').textContent = wm[val]+'字';
+    const wm = {threads:220, ig:300, fb:450, all:300};
+    document.getElementById('maxwords').value = wm[val]||250;
+    document.getElementById('mw-val').textContent = (wm[val]||250)+'字';
   }
 }
 function selOpt(btn, key, val){
@@ -772,10 +817,10 @@ function toggleRec(i){
 //  PROMPT BUILDER
 // ═══════════════════════════════════════════════
 function buildPrompt(cfg){
-  const { plat, type, style, goal, urls, article, brief, rules, maxW, regen, prodApproved } = cfg;
+  const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved } = cfg;
   const spec = PLAT_SPEC[plat] || PLAT_SPEC.threads;
-  const urlNote = urls.length ? `\n\n參考文章網址（請擷取文章重點，根據選定風格重新包裝，不要直接翻譯，要符合 OnePack 大叔語調）：\n${urls.join('\n')}` : '';
-  const artNote = article ? `\n\n參考文章原文（根據這篇的核心論點，用選定風格改寫成社群貼文）：\n───\n${article}\n───` : '';
+  const urlNote = urls.length ? `\n\n參考文章網址（請擷取文章核心論點，根據選定口氣和風格重新包裝，不要直接翻譯，要符合 OnePack 大叔語調）：\n${urls.join('\n')}` : '';
+  const artNote = article ? `\n\n參考文章原文（根據這篇的核心論點，用選定口氣和風格改寫成社群貼文）：\n───\n${article}\n───` : '';
   const briefNote = brief ? `\n\n補充說明：${brief}` : '';
   const rulesNote = rules ? `\n\n寫作規則（必須遵守）：\n${rules}` : '';
   const regenNote = regen ? '\n\n（⚠️ 請從完全不同的角度切入，不要和上一版重複）' : '';
@@ -795,13 +840,24 @@ function buildPrompt(cfg){
   }
 
   const topicCtx = TOPICS_DEF[type] ? `主題類型：${TOPICS_DEF[type].icon} ${TOPICS_DEF[type].name}` : '';
+  const tonePrompt = TONE_PROMPT[tone] || TONE_PROMPT.uncle;
+  const stylePrompt = STYLE_PROMPT[style] || STYLE_PROMPT.news;
+
+  // Combine tone × style naturally
+  const combinedVoice = `${tonePrompt}
+
+${stylePrompt}
+
+【口氣 × 風格的疊加效果】這篇文章要同時體現上面的口氣和風格。例如：「幽默風趣」+「故事敘事型」= 用輕鬆有趣的方式說一個有起承轉合的故事；「深度教育」+「新聞引用型」= 像學術型大叔用媒體數據做深度分析。請讓兩者自然融合，不要讓讀者感覺「口氣跟結構打架」。`;
 
   return `${ONEPACK_BASE}
 
 ${topicCtx}
 平台規格：${spec.desc || PLAT_SPEC.threads.desc}
 字數上限：${maxW} 字以內
-${STYLE_PROMPT[style]}
+
+${combinedVoice}
+
 ${GOAL_PROMPT[goal]}${urlNote}${artNote}${briefNote}${prodNote}${rulesNote}${regenNote}
 
 請直接輸出貼文本體，不要加任何前言或說明。`;
@@ -845,7 +901,7 @@ async function genPost(regen){
   btn.innerHTML = '<div class="spin"></div> 生成中...';
   document.getElementById('out-wrap').style.display = 'block';
 
-  const cfg = { plat:G.plat, type:G.type, style:G.style, goal:G.goal, urls, article, brief, rules, maxW, regen, prodApproved };
+  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief, rules, maxW, regen, prodApproved };
 
   try{
     if(G.plat === 'all'){
@@ -853,10 +909,10 @@ async function genPost(regen){
       document.getElementById('out-triple').style.display = 'block';
       ['th','fb'].forEach(k=>{ document.getElementById('otxt-'+k).textContent='生成中...'; });
 
-      // Parallel generation
+      // Parallel generation for Threads + FB (IG syncs with FB)
       const [txtTh, txtFb] = await Promise.all([
         callAPI(buildPrompt({...cfg, plat:'threads', maxW:220})),
-        callAPI(buildPrompt({...cfg, plat:'fb', maxW:400})),
+        callAPI(buildPrompt({...cfg, plat:'fb', maxW:450})),
       ]);
       G.outs = { threads:txtTh, fb:txtFb };
 
@@ -864,7 +920,7 @@ async function genPost(regen){
       document.getElementById('otxt-fb').textContent = txtFb;
       document.getElementById('wc-th').textContent = [...txtTh].length+'字';
       document.getElementById('wc-fb').textContent = [...txtFb].length+'字';
-      document.getElementById('out-tip').textContent = '✓ 兩個版本已生成，Threads 每天發，FB+IG 每 2 天發';
+      document.getElementById('out-tip').textContent = '✓ 兩個版本已生成。Threads 每天發；FB 版同步到 IG，每 2 天發';
       G.stats.threads++; G.stats.fb++; G.stats.total+=2;
     } else {
       document.getElementById('out-single').style.display = 'block';
@@ -1013,7 +1069,8 @@ function openPanel(dateKey){
         <label class="field-label">平台</label>
         <select id="p-plat">
           <option value="threads" ${(data.plat||'threads')==='threads'?'selected':''}>Threads</option>
-          <option value="fb" ${data.plat==='fb'?'selected':''}>FB + IG</option>
+          <option value="ig" ${data.plat==='ig'?'selected':''}>Instagram</option>
+          <option value="fb" ${data.plat==='fb'?'selected':''}>Facebook</option>
           <option value="all" ${data.plat==='all'?'selected':''}>三平台同步</option>
         </select>
       </div>
@@ -1026,6 +1083,15 @@ function openPanel(dateKey){
     </div>
     <div class="g2" style="margin-bottom:12px">
       <div>
+        <label class="field-label">說話口氣</label>
+        <select id="p-tone">
+          <option value="uncle" ${(data.tone||'uncle')==='uncle'?'selected':''}>🧔 經驗大叔</option>
+          <option value="energetic" ${data.tone==='energetic'?'selected':''}>⚡ 熱情活力</option>
+          <option value="edu" ${data.tone==='edu'?'selected':''}>🎓 深度教育</option>
+          <option value="humor" ${data.tone==='humor'?'selected':''}>😄 幽默風趣</option>
+        </select>
+      </div>
+      <div>
         <label class="field-label">敘事風格</label>
         <select id="p-style">
           <option value="news" ${(data.style||'news')==='news'?'selected':''}>📰 新聞引用型</option>
@@ -1034,15 +1100,15 @@ function openPanel(dateKey){
           <option value="contrast" ${data.style==='contrast'?'selected':''}>🆚 對比反差型</option>
         </select>
       </div>
-      <div>
-        <label class="field-label">發文目標</label>
-        <select id="p-goal">
-          <option value="acquire" ${(data.goal||'acquire')==='acquire'?'selected':''}>🎯 開發潛在客戶</option>
-          <option value="engage" ${data.goal==='engage'?'selected':''}>💬 互動留言</option>
-          <option value="brand" ${data.goal==='brand'?'selected':''}>⭐ 品牌曝光</option>
-          <option value="vendor" ${data.goal==='vendor'?'selected':''}>🍱 版主留言</option>
-        </select>
-      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">發文目標</label>
+      <select id="p-goal">
+        <option value="acquire" ${(data.goal||'acquire')==='acquire'?'selected':''}>🎯 開發潛在客戶</option>
+        <option value="engage" ${data.goal==='engage'?'selected':''}>💬 互動留言</option>
+        <option value="brand" ${data.goal==='brand'?'selected':''}>⭐ 品牌曝光</option>
+        <option value="vendor" ${data.goal==='vendor'?'selected':''}>🍱 版主留言</option>
+      </select>
     </div>
     ${data.text ? `
     <div style="margin-bottom:12px">
@@ -1078,6 +1144,7 @@ function panelSave(){
     article: document.getElementById('p-article').value.trim(),
     plat: document.getElementById('p-plat').value,
     type: document.getElementById('p-type').value,
+    tone: document.getElementById('p-tone').value,
     style: document.getElementById('p-style').value,
     goal: document.getElementById('p-goal').value,
   };
@@ -1092,7 +1159,8 @@ async function panelGen(){
   const data = G.calData[G.panelDate];
   const urls = data.url ? [data.url] : [];
   const cfg = {
-    plat: data.plat, type: data.type, style: data.style, goal: data.goal,
+    plat: data.plat, type: data.type, tone: data.tone||'uncle',
+    style: data.style, goal: data.goal,
     urls, article: data.article||'', brief: data.topic||'',
     rules: localStorage.getItem('writing_rules')||'',
     maxW: PLAT_SPEC[data.plat]?.chars || 220,
