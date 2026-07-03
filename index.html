@@ -246,6 +246,26 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   text-align:center;cursor:pointer;transition:all .14s}
 .drop-zone:hover,.drop-zone.has{border-color:var(--green);background:var(--gbg)}
 
+/* ─── DATE PICKER MODAL ─── */
+.cal-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none}
+.cal-modal-overlay.open{display:block}
+.cal-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);
+  width:380px;background:var(--card);border-radius:var(--r);box-shadow:0 20px 40px rgba(0,0,0,.18);
+  z-index:201;display:none;flex-direction:column;overflow:hidden;transition:transform .2s}
+.cal-modal.open{display:flex;transform:translate(-50%,-50%)}
+.cal-modal-head{padding:14px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.cal-modal-body{padding:16px;flex:1}
+.cal-modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+.cal-modal-day{padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);
+  cursor:pointer;text-align:center;font-size:12px;transition:all .12s;background:var(--card)}
+.cal-modal-day:hover{border-color:var(--green);background:var(--gbg)}
+.cal-modal-day.today{border-color:var(--green);box-shadow:0 0 0 2px var(--gbg)}
+.cal-modal-day.has-post{border-left:3px solid var(--green)}
+.cal-modal-day.selected{border-color:var(--amber);background:var(--abg);font-weight:700}
+.cal-modal-day.rest{background:var(--bg);opacity:.4;cursor:default;pointer-events:none}
+.cal-modal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--hint);padding:2px 0}
+
 @media(max-width:700px){
   .sb{display:none}
   .panel{width:100%}
@@ -523,13 +543,14 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
           <div class="card" style="margin-bottom:0" id="out-th-card">
             <div class="out-head"><span style="font-size:12px;font-weight:700">Threads</span><span class="badge" id="wc-th">0 字</span></div>
             <div class="out-box" id="otxt-th" style="min-height:60px"></div>
-            <div class="brow"><button class="btn btn-green btn-sm" onclick="cp(G.outs.threads,'Threads 已複製 ✓')">⧉ 複製</button></div>
+            <div class="brow"><button class="btn btn-green btn-sm" onclick="cp(G.outs.threads,'Threads 已複製 ✓')">⧉ 複製</button><button class="btn btn-sm" onclick="sendToCalPanel('threads')">📅 放入行事曆</button></div>
           </div>
           <div class="card" style="margin-bottom:0">
             <div class="out-head"><span style="font-size:12px;font-weight:700">FB + IG</span><span class="badge" id="wc-fb">0 字</span></div>
             <div class="out-box" id="otxt-fb" style="min-height:60px"></div>
             <div class="brow">
               <button class="btn btn-green btn-sm" onclick="cp(G.outs.fb,'FB 已複製 ✓')">⧉ 複製</button>
+              <button class="btn btn-sm" onclick="sendToCalPanel('fb')">📅 放入行事曆</button>
               <button class="btn btn-sm" onclick="saveAllPosts()">↓ 存全部</button>
             </div>
           </div>
@@ -590,6 +611,32 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
       ✦ 生成貼文
     </button>
     <button class="btn" onclick="panelSave()">↓ 只儲存設定</button>
+  </div>
+</div>
+
+<!-- ═══ DATE PICKER MODAL ═══ -->
+<div class="cal-modal-overlay" id="cal-modal-overlay" onclick="closeCalModal()"></div>
+<div class="cal-modal" id="cal-modal">
+  <div class="cal-modal-head">
+    <span style="font-size:15px;font-weight:700">📅 選擇放入行事曆的日期</span>
+    <button class="btn btn-sm" onclick="closeCalModal()">✕</button>
+  </div>
+  <div class="cal-modal-body">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="cal-modal-preview"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn btn-sm" onclick="calModalWeek(-1)">← 上週</button>
+      <span style="font-size:13px;font-weight:600" id="cal-modal-wklabel"></span>
+      <button class="btn btn-sm" onclick="calModalWeek(1)">下週 →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px" id="cal-modal-head"></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="cal-modal-grid"></div>
+    <div class="info info-amber" style="margin-top:10px;display:none" id="cal-modal-warn">
+      ⚠️ 這天已有貼文草稿，確認後會覆蓋
+    </div>
+  </div>
+  <div class="cal-modal-foot">
+    <button class="btn btn-primary" style="flex:1;justify-content:center" id="cal-modal-confirm" onclick="confirmCalDate()" disabled>✓ 放入這天</button>
+    <button class="btn" onclick="closeCalModal()">取消</button>
   </div>
 </div>
 
@@ -700,6 +747,10 @@ const DEFAULT_PRODUCTS = [
 // ═══════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════
+let topicFilter = 'all';
+let emojiCurrentCat = '常用';
+let emojiSaveRange = null;
+
 const G = {
   apiKey: localStorage.getItem('ak') || '',
   plat: 'threads',
@@ -998,10 +1049,101 @@ function saveAllPosts(){
   if(G.outs.fb) addHist({text:G.outs.fb, type:G.type, plat:'fb', style:G.style});
   toast('兩篇已存入紀錄 ✓');
 }
-function sendToCalPanel(){
-  if(!G.curOut) return;
-  go('cal');
-  toast('請點行事曆格子，再選「貼入已生成的貼文」');
+// 放入行事曆 — 開啟日期選擇 modal
+function sendToCalPanel(platKey){
+  // platKey: undefined = single, 'threads'/'fb' = from triple output
+  const text = platKey ? (G.outs[platKey]||'') : G.curOut;
+  if(!text){ toast('沒有可放入的貼文內容'); return; }
+  G._calPendingText = text;
+  G._calPendingPlat = platKey || G.plat;
+  G._calPendingType = G.type;
+  G._calPendingStyle = G.style;
+  G._calPendingTone = G.tone;
+  G._calPendingGoal = G.goal;
+  G._calModalWeekOff = 0;
+  G._calSelectedDate = null;
+  openCalModal();
+}
+
+function openCalModal(){
+  document.getElementById('cal-modal-overlay').classList.add('open');
+  document.getElementById('cal-modal').classList.add('open');
+  document.getElementById('cal-modal-confirm').disabled = true;
+  document.getElementById('cal-modal-warn').style.display = 'none';
+  // Preview text
+  const prev = G._calPendingText || '';
+  document.getElementById('cal-modal-preview').textContent = '貼文預覽：' + prev.slice(0,60) + (prev.length>60?'…':'');
+  renderCalModal();
+}
+
+function closeCalModal(){
+  document.getElementById('cal-modal-overlay').classList.remove('open');
+  document.getElementById('cal-modal').classList.remove('open');
+  G._calSelectedDate = null;
+}
+
+function calModalWeek(dir){ G._calModalWeekOff = (G._calModalWeekOff||0) + dir; renderCalModal(); }
+
+function renderCalModal(){
+  const off = G._calModalWeekOff || 0;
+  const ws = weekStart(off);
+  const we = new Date(ws); we.setDate(ws.getDate()+6);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  document.getElementById('cal-modal-wklabel').textContent = `${fmt(ws)} – ${fmt(we)}`;
+  const today = dk(new Date());
+
+  document.getElementById('cal-modal-head').innerHTML =
+    DOW.map(d=>`<div class="cal-modal-dh">週${d}</div>`).join('');
+
+  const grid = document.getElementById('cal-modal-grid');
+  grid.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(ws); d.setDate(ws.getDate()+i);
+    const key = dk(d);
+    const isSun = d.getDay()===0;
+    const hasPost = !!G.calData[key]?.text;
+    const isSelected = G._calSelectedDate === key;
+    const isToday = key === today;
+    let cls = 'cal-modal-day';
+    if(isSun) cls += ' rest';
+    if(isToday) cls += ' today';
+    if(hasPost) cls += ' has-post';
+    if(isSelected) cls += ' selected';
+    const cell = document.createElement('div');
+    cell.className = cls;
+    cell.innerHTML = `<div style="font-weight:700;font-size:13px">${d.getDate()}</div>
+      <div style="font-size:9px;color:var(--hint);margin-top:2px">${hasPost?'有草稿':'空'}</div>`;
+    if(!isSun) cell.onclick = () => selectCalDate(key, hasPost);
+    grid.appendChild(cell);
+  }
+}
+
+function selectCalDate(key, hasPost){
+  G._calSelectedDate = key;
+  document.getElementById('cal-modal-confirm').disabled = false;
+  document.getElementById('cal-modal-warn').style.display = hasPost ? 'block' : 'none';
+  renderCalModal();
+}
+
+function confirmCalDate(){
+  const key = G._calSelectedDate;
+  if(!key || !G._calPendingText) return;
+  // Merge into calData
+  if(!G.calData[key]) G.calData[key] = {};
+  G.calData[key].text = G._calPendingText;
+  G.calData[key].plat = G._calPendingPlat || 'threads';
+  G.calData[key].type = G._calPendingType || 'food';
+  G.calData[key].style = G._calPendingStyle || 'news';
+  G.calData[key].tone = G._calPendingTone || 'uncle';
+  G.calData[key].goal = G._calPendingGoal || 'acquire';
+  // If no topic yet, set a placeholder
+  if(!G.calData[key].topic) G.calData[key].topic = '貼文產生器匯入';
+  localStorage.setItem('cal_v2', JSON.stringify(G.calData));
+  closeCalModal();
+  const d = new Date(key);
+  toast(`✓ 已放入 ${d.getMonth()+1}/${d.getDate()}，可到行事曆查看編輯`);
+  // If currently on cal page, re-render
+  if(document.getElementById('p-cal').classList.contains('active')) renderCal();
 }
 
 // ═══════════════════════════════════════════════
@@ -1272,7 +1414,6 @@ async function panelGen(){
 // ═══════════════════════════════════════════════
 //  TOPICS
 // ═══════════════════════════════════════════════
-let topicFilter = 'all';
 function filterTopics(btn, f){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
@@ -1609,9 +1750,6 @@ const EMOJI_DATA = {
   '表情': ['😀','😂','🥲','😍','🤩','😎','🧐','🤓','😤','😩','🥺','😱','🤯','😴','🤗','🫶','💖','💯','🎉','🏆'],
   '生活': ['📱','💻','🏠','🚗','✈️','⏰','📅','🗓️','📝','✏️','🔑','💰','📈','📉','🎓','🏋️','🛒','☕','🍵','🌙'],
 };
-
-let emojiCurrentCat = '常用';
-let emojiSaveRange = null;
 
 function initEmojiPicker(){
   const picker = document.getElementById('emoji-picker');
