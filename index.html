@@ -241,6 +241,13 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
 .range-row input[type=range]{flex:1;accent-color:var(--green)}
 .range-val{font-size:13px;font-weight:700;min-width:38px;text-align:right}
 
+/* ─── SOURCE TABS ─── */
+.src-tab{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);
+  cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);background:none;
+  transition:all .12s;font-family:inherit}
+.src-tab:hover{border-color:var(--green);color:var(--text)}
+.src-tab.on{border-color:var(--green);background:var(--gbg);color:var(--gtxt);font-weight:700}
+
 /* ─── DROP ZONE ─── */
 .drop-zone{border:1.5px dashed var(--border);border-radius:var(--rs);padding:18px;
   text-align:center;cursor:pointer;transition:all .14s}
@@ -387,34 +394,67 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
 
     <!-- Reference -->
     <div class="card">
-      <div class="card-title">參考來源（貼入文章或網址，AI 改寫成貼文）</div>
-      <div id="url-list">
-        <div class="url-row" style="display:flex;gap:8px;margin-bottom:7px">
-          <input type="url" placeholder="貼上文章網址 https://..." class="url-inp">
-          <button class="btn btn-sm" style="flex-shrink:0" onclick="rmUrl(this)">✕</button>
+      <div class="card-title">輸入來源 — 選一種或合併使用</div>
+
+      <!-- Source type tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="src-tab on" onclick="selSrcTab(this,'url')" id="src-tab-url">🔗 網址</button>
+        <button class="src-tab" onclick="selSrcTab(this,'text')" id="src-tab-text">📝 貼文章</button>
+        <button class="src-tab" onclick="selSrcTab(this,'img')" id="src-tab-img">📷 上傳圖片</button>
+      </div>
+
+      <!-- URL input -->
+      <div id="src-url">
+        <div id="url-list">
+          <div class="url-row" style="display:flex;gap:8px;margin-bottom:7px">
+            <input type="url" placeholder="貼上文章網址 https://..." class="url-inp">
+            <button class="btn btn-sm" style="flex-shrink:0" onclick="rmUrl(this)">✕</button>
+          </div>
+        </div>
+        <button class="btn btn-sm" onclick="addUrl()">+ 新增網址</button>
+        <div class="info info-blue" style="margin-top:8px;font-size:11px">
+          💡 AI 會自動擷取文章重點，依你選的口氣和風格重新包裝，不需要另外輸入主題
         </div>
       </div>
-      <button class="btn btn-sm" onclick="addUrl()">+ 新增網址</button>
-      <div style="margin-top:10px">
-        <label class="field-label">或直接貼入文章內容</label>
-        <textarea id="article-txt" rows="4" placeholder="貼上文章原文..."></textarea>
-      </div>
-    </div>
 
-    <!-- Topic & supplement -->
-    <div class="card">
-      <div class="card-title">主題類型</div>
-      <div class="opt-grid cols3" id="type-grid">
-        <button class="opt-btn on" onclick="selOpt(this,'type','food')"><span class="ob-title">🍱 食物分析</span><span class="ob-sub">照片或外食描述</span></button>
-        <button class="opt-btn" onclick="selOpt(this,'type','myth')"><span class="ob-title">💡 飲食迷思</span><span class="ob-sub">破解常見誤解</span></button>
-        <button class="opt-btn" onclick="selOpt(this,'type','science')"><span class="ob-title">🔬 營養科學</span><span class="ob-sub">醫學研究普及</span></button>
-        <button class="opt-btn" onclick="selOpt(this,'type','tool')"><span class="ob-title">🤖 工具展示</span><span class="ob-sub">AI 教練功能</span></button>
-        <button class="opt-btn" onclick="selOpt(this,'type','qa')"><span class="ob-title">❓ 問答互動</span><span class="ob-sub">引發留言</span></button>
-        <button class="opt-btn" onclick="selOpt(this,'type','case')"><span class="ob-title">👤 使用者故事</span><span class="ob-sub">真實案例</span></button>
+      <!-- Text input -->
+      <div id="src-text" style="display:none">
+        <textarea id="article-txt" rows="7" placeholder="貼上文章原文、學員回饋文字、對話紀錄...&#10;&#10;AI 會根據內容自動判斷核心論點，用你選的口氣改寫成社群貼文"></textarea>
       </div>
-      <div style="margin-top:10px">
-        <label class="field-label">補充說明（可選）</label>
-        <textarea id="brief-txt" rows="2" placeholder="想強調的重點、特定產品、或給 AI 的補充指示..."></textarea>
+
+      <!-- Image input -->
+      <div id="src-img" style="display:none">
+        <div class="drop-zone" id="img-dropzone"
+          onclick="document.getElementById('img-file-input').click()"
+          ondragover="event.preventDefault()"
+          ondrop="onImgDrop(event)">
+          <div id="img-placeholder">
+            <div style="font-size:28px;margin-bottom:6px">📷</div>
+            <div style="font-size:13px;color:var(--muted)">點擊上傳 / 拖曳 / Ctrl+V 貼上截圖</div>
+            <div style="font-size:11px;color:var(--hint);margin-top:4px">支援 JPG、PNG、WEBP，食物照片、截圖皆可</div>
+          </div>
+          <img id="img-preview" style="display:none;max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;border:1px solid var(--border)" alt="預覽">
+        </div>
+        <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="onImgFile(event)">
+        <div id="img-controls" style="display:none;margin-top:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--green);font-weight:600">✓ 圖片已載入</span>
+            <button class="btn btn-sm" style="color:var(--red)" onclick="clearImg()">✕ 移除</button>
+          </div>
+          <div style="margin-top:8px">
+            <label class="field-label">補充描述（可選）— 告訴 AI 這張圖的背景或你想強調的點</label>
+            <textarea id="img-desc" rows="2" placeholder="例：這是學員昨天的午餐便當，想分析這個搭配的營養和熱量..."></textarea>
+          </div>
+        </div>
+        <div class="info info-blue" style="margin-top:8px;font-size:11px" id="img-hint">
+          💡 上傳食物照片 → AI 分析營養並產出貼文；上傳截圖 → AI 根據截圖內容改寫成社群貼文
+        </div>
+      </div>
+
+      <!-- Supplement (always visible) -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <label class="field-label">補充說明 / 想強調的重點（可選）</label>
+        <textarea id="brief-txt" rows="2" placeholder="例：想強調 AI 飲食教練是免費的、想帶入 BUN 數值、這篇要 tag 食物版主..."></textarea>
       </div>
     </div>
 
@@ -836,6 +876,73 @@ function selOpt(btn, key, val){
 }
 
 // ═══════════════════════════════════════════════
+//  SOURCE TAB & IMAGE
+// ═══════════════════════════════════════════════
+function selSrcTab(btn, tab){
+  document.querySelectorAll('.src-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['url','text','img'].forEach(t=>{
+    document.getElementById('src-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  // Clear other sources when switching
+  if(tab==='url') { document.getElementById('article-txt').value=''; clearImg(); }
+  if(tab==='text') { document.querySelectorAll('.url-inp').forEach(i=>i.value=''); clearImg(); }
+  if(tab==='img') { document.querySelectorAll('.url-inp').forEach(i=>i.value=''); document.getElementById('article-txt').value=''; }
+}
+
+function onImgFile(e){
+  if(e.target.files[0]) loadImg(e.target.files[0]);
+}
+function onImgDrop(e){
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if(f && f.type.startsWith('image/')) loadImg(f);
+}
+
+// Ctrl+V paste image support
+document.addEventListener('paste', e=>{
+  // Only handle paste when img tab is active
+  if(document.getElementById('src-img').style.display === 'none') return;
+  for(const item of (e.clipboardData?.items||[])){
+    if(item.type.startsWith('image/')){
+      loadImg(item.getAsFile());
+      break;
+    }
+  }
+});
+
+function loadImg(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    G.img64 = ev.target.result.split(',')[1];
+    const preview = document.getElementById('img-preview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('img-placeholder').style.display = 'none';
+    document.getElementById('img-controls').style.display = 'block';
+    document.getElementById('img-hint').style.display = 'none';
+    document.getElementById('img-dropzone').classList.add('has');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImg(){
+  G.img64 = null;
+  const preview = document.getElementById('img-preview');
+  if(preview){ preview.style.display='none'; preview.src=''; }
+  const ph = document.getElementById('img-placeholder');
+  if(ph) ph.style.display='block';
+  const ctrl = document.getElementById('img-controls');
+  if(ctrl) ctrl.style.display='none';
+  const hint = document.getElementById('img-hint');
+  if(hint) hint.style.display='block';
+  const dz = document.getElementById('img-dropzone');
+  if(dz) dz.classList.remove('has');
+  const fi = document.getElementById('img-file-input');
+  if(fi) fi.value='';
+}
+
+// ═══════════════════════════════════════════════
 //  URL MANAGEMENT
 // ═══════════════════════════════════════════════
 function addUrl(){
@@ -907,8 +1014,9 @@ function toggleRec(i){
 //  PROMPT BUILDER
 // ═══════════════════════════════════════════════
 function buildPrompt(cfg){
-  const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved } = cfg;
+  const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved, img64 } = cfg;
   const spec = PLAT_SPEC[plat] || PLAT_SPEC.threads;
+  const imgNote = img64 ? `\n\n【圖片輸入】上方附有一張圖片，請先仔細分析圖片內容（如果是食物：估算熱量、蛋白質、脂肪、碳水；如果是截圖：理解文字內容）再根據分析結果產出貼文。` : '';
   const urlNote = urls.length ? `\n\n參考文章網址（請擷取文章核心論點，根據選定口氣和風格重新包裝，不要直接翻譯，要符合 OnePack 大叔語調）：\n${urls.join('\n')}` : '';
   const artNote = article ? `\n\n參考文章原文（根據這篇的核心論點，用選定口氣和風格改寫成社群貼文）：\n───\n${article}\n───` : '';
   const briefNote = brief ? `\n\n補充說明：${brief}` : '';
@@ -942,13 +1050,12 @@ ${stylePrompt}
 
   return `${ONEPACK_BASE}
 
-${topicCtx}
 平台規格：${spec.desc || PLAT_SPEC.threads.desc}
 字數上限：${maxW} 字以內
 
 ${combinedVoice}
 
-${GOAL_PROMPT[goal]}${urlNote}${artNote}${briefNote}${prodNote}${rulesNote}${regenNote}
+${GOAL_PROMPT[goal]}${imgNote}${urlNote}${artNote}${briefNote}${prodNote}${rulesNote}${regenNote}
 
 請直接輸出貼文本體，不要加任何前言或說明。`;
 }
@@ -983,15 +1090,19 @@ async function genPost(regen){
   const maxW = document.getElementById('maxwords').value;
   const hasProd = document.getElementById('prod-toggle').checked;
   const prodApproved = hasProd ? (G.approvedProds || []) : [];
+  const img64 = G.img64 || null;
+  const imgDesc = document.getElementById('img-desc')?.value.trim() || '';
 
-  if(!urls.length && !article && !brief){ toast('請填入文章網址、文章內容或補充說明'); return; }
+  if(!urls.length && !article && !brief && !img64){ toast('請選擇輸入來源：網址、文章、或上傳圖片'); return; }
 
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
   btn.innerHTML = '<div class="spin"></div> 生成中...';
   document.getElementById('out-wrap').style.display = 'block';
 
-  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief, rules, maxW, regen, prodApproved };
+  // For image mode, add description to brief
+  const effectiveBrief = img64 && imgDesc ? imgDesc + (brief ? '\n' + brief : '') : brief;
+  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief:effectiveBrief, rules, maxW, regen, prodApproved, img64 };
 
   try{
     if(G.plat === 'all'){
@@ -1000,9 +1111,10 @@ async function genPost(regen){
       ['th','fb'].forEach(k=>{ document.getElementById('otxt-'+k).textContent='生成中...'; });
 
       // Parallel generation for Threads + FB (IG syncs with FB)
+      // Note: image only sent to first call to avoid duplication; prompt describes it for fb
       const [txtTh, txtFb] = await Promise.all([
-        callAPI(buildPrompt({...cfg, plat:'threads', maxW:220})),
-        callAPI(buildPrompt({...cfg, plat:'fb', maxW:450})),
+        callAPI(buildPrompt({...cfg, plat:'threads', maxW:220}), img64),
+        callAPI(buildPrompt({...cfg, plat:'fb', maxW:450}), img64),
       ]);
       G.outs = { threads:txtTh, fb:txtFb };
 
@@ -1016,7 +1128,7 @@ async function genPost(regen){
       document.getElementById('out-single').style.display = 'block';
       document.getElementById('out-triple').style.display = 'none';
       document.getElementById('out-txt').textContent = '生成中...';
-      const txt = await callAPI(buildPrompt(cfg));
+      const txt = await callAPI(buildPrompt(cfg), img64);
       G.curOut = txt;
       document.getElementById('out-txt').textContent = txt;
       const wc = [...txt].length;
