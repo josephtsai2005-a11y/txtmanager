@@ -583,15 +583,20 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
           <div class="card" style="margin-bottom:0" id="out-th-card">
             <div class="out-head"><span style="font-size:12px;font-weight:700">Threads</span><span class="badge" id="wc-th">0 字</span></div>
             <div class="out-box" id="otxt-th" style="min-height:60px"></div>
-            <div class="brow"><button class="btn btn-green btn-sm" onclick="cp(G.outs.threads,'Threads 已複製 ✓')">⧉ 複製</button><button class="btn btn-sm" onclick="sendToCalPanel('threads')">📅 放入行事曆</button></div>
+            <div class="brow">
+              <button class="btn btn-green btn-sm" onclick="cp(G.outs.threads,'Threads 已複製 ✓')">⧉ 複製</button>
+              <button class="btn btn-sm" onclick="saveSinglePost('threads')">↓ 存入紀錄</button>
+              <button class="btn btn-sm" onclick="sendToCalPanel('threads')">📅 放入行事曆</button>
+            </div>
           </div>
           <div class="card" style="margin-bottom:0">
             <div class="out-head"><span style="font-size:12px;font-weight:700">FB + IG</span><span class="badge" id="wc-fb">0 字</span></div>
             <div class="out-box" id="otxt-fb" style="min-height:60px"></div>
             <div class="brow">
               <button class="btn btn-green btn-sm" onclick="cp(G.outs.fb,'FB 已複製 ✓')">⧉ 複製</button>
+              <button class="btn btn-sm" onclick="saveSinglePost('fb')">↓ 存入紀錄</button>
               <button class="btn btn-sm" onclick="sendToCalPanel('fb')">📅 放入行事曆</button>
-              <button class="btn btn-sm" onclick="saveAllPosts()">↓ 存全部</button>
+              <button class="btn btn-sm" style="color:var(--muted)" onclick="saveAllPosts()">↓ 存全部</button>
             </div>
           </div>
         </div>
@@ -1172,6 +1177,12 @@ async function genPost(regen){
 }
 
 function cpOut(){ if(G.curOut) cp(G.curOut,'已複製 ✓'); }
+function saveSinglePost(platKey){
+  const text = G.outs[platKey];
+  if(!text){ toast('沒有內容可存'); return; }
+  addHist({text, type:G.type, plat:platKey, style:G.style});
+  toast(`${platKey==='threads'?'Threads':'FB+IG'} 已存入紀錄 ✓`);
+}
 function savePost(){
   if(!G.curOut) return;
   addHist({text:G.curOut, type:G.type, plat:G.plat, style:G.style});
@@ -1184,9 +1195,10 @@ function saveAllPosts(){
 }
 // 放入行事曆 — 開啟日期選擇 modal
 function sendToCalPanel(platKey){
-  // platKey: undefined = single, 'threads'/'fb' = from triple output
   const text = platKey ? (G.outs[platKey]||'') : G.curOut;
-  if(!text){ toast('沒有可放入的貼文內容'); return; }
+  if(!text){ toast('沒有可放入的貼文，請先生成'); return; }
+  // 確保 panel 不會干擾 modal
+  closePanel();
   G._calPendingText = text;
   G._calPendingPlat = platKey || G.plat;
   G._calPendingType = G.type;
@@ -1199,13 +1211,20 @@ function sendToCalPanel(platKey){
 }
 
 function openCalModal(){
-  document.getElementById('cal-modal-overlay').classList.add('open');
-  document.getElementById('cal-modal').classList.add('open');
-  document.getElementById('cal-modal-confirm').disabled = true;
-  document.getElementById('cal-modal-warn').style.display = 'none';
-  // Preview text
+  const overlay = document.getElementById('cal-modal-overlay');
+  const modal = document.getElementById('cal-modal');
+  const confirmBtn = document.getElementById('cal-modal-confirm');
+  const warn = document.getElementById('cal-modal-warn');
+  if(!overlay || !modal){ toast('找不到日期選擇元件，請重新整理頁面'); return; }
+  overlay.classList.add('open');
+  modal.classList.add('open');
+  confirmBtn.disabled = true;
+  warn.style.display = 'none';
+  // 貼文預覽
   const prev = G._calPendingText || '';
-  document.getElementById('cal-modal-preview').textContent = '貼文預覽：' + prev.slice(0,60) + (prev.length>60?'…':'');
+  const platLabel = {threads:'Threads', ig:'IG', fb:'FB+IG', all:'三平台'}[G._calPendingPlat] || '';
+  document.getElementById('cal-modal-preview').textContent =
+    `${platLabel ? '['+platLabel+'] ' : ''}${prev.slice(0,80)}${prev.length>80?'…':''}`;
   renderCalModal();
 }
 
@@ -1260,8 +1279,8 @@ function selectCalDate(key, hasPost){
 
 function confirmCalDate(){
   const key = G._calSelectedDate;
-  if(!key || !G._calPendingText) return;
-  // Merge into calData
+  if(!key){ toast('請先點選一個日期'); return; }
+  if(!G._calPendingText){ toast('貼文內容遺失，請重新操作'); return; }
   if(!G.calData[key]) G.calData[key] = {};
   G.calData[key].text = G._calPendingText;
   G.calData[key].plat = G._calPendingPlat || 'threads';
@@ -1269,14 +1288,41 @@ function confirmCalDate(){
   G.calData[key].style = G._calPendingStyle || 'news';
   G.calData[key].tone = G._calPendingTone || 'uncle';
   G.calData[key].goal = G._calPendingGoal || 'acquire';
-  // If no topic yet, set a placeholder
   if(!G.calData[key].topic) G.calData[key].topic = '貼文產生器匯入';
   localStorage.setItem('cal_v2', JSON.stringify(G.calData));
   closeCalModal();
   const d = new Date(key);
-  toast(`✓ 已放入 ${d.getMonth()+1}/${d.getDate()}，可到行事曆查看編輯`);
-  // If currently on cal page, re-render
-  if(document.getElementById('p-cal').classList.contains('active')) renderCal();
+  const label = `${d.getMonth()+1}/${d.getDate()}`;
+  toast(`✓ 已放入 ${label}！`);
+  // 自動跳轉到行事曆並顯示該週
+  const targetOff = Math.round((new Date(key) - new Date()) / (7*24*3600*1000));
+  G.weekOff = Math.max(-4, Math.min(4, Math.round(targetOff/7)*0 + (new Date(key) >= new Date() ? 0 : -1)));
+  // 更精確地計算目標週offset
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStart = weekStart(0);
+  const targetDate = new Date(key);
+  let off = 0;
+  while(true){
+    const ws = weekStart(off);
+    const we = new Date(ws); we.setDate(ws.getDate()+6);
+    if(targetDate >= ws && targetDate <= we) break;
+    off += targetDate > we ? 1 : -1;
+    if(Math.abs(off) > 8) break;
+  }
+  G.weekOff = off;
+  go('cal');
+  renderCal();
+  // 短暫高亮目標格子
+  setTimeout(()=>{
+    const cells = document.querySelectorAll('.cal-cell');
+    cells.forEach(c=>{
+      if(c.querySelector('.cal-date')?.textContent == new Date(key).getDate()){
+        c.style.transition = 'box-shadow .3s';
+        c.style.boxShadow = '0 0 0 3px var(--amber)';
+        setTimeout(()=>c.style.boxShadow='', 2000);
+      }
+    });
+  }, 100);
 }
 
 // ═══════════════════════════════════════════════
