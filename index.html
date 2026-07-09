@@ -241,6 +241,17 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
 .range-row input[type=range]{flex:1;accent-color:var(--green)}
 .range-val{font-size:13px;font-weight:700;min-width:38px;text-align:right}
 
+/* ─── MODE SWITCH ─── */
+.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.mode-btn{padding:14px 16px;border-radius:var(--r);border:2px solid var(--border);
+  cursor:pointer;background:var(--card);transition:all .15s;text-align:center;
+  font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mode-btn:hover{border-color:var(--green);background:var(--gbg)}
+.mode-btn.on{border-color:var(--green);background:var(--gbg);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
+.mode-btn-title{font-size:14px;font-weight:700;color:var(--text)}
+.mode-btn-sub{font-size:11px;color:var(--muted)}
+.mode-btn.on .mode-btn-title{color:var(--gtxt)}
+
 /* ─── SOURCE TABS ─── */
 .src-tab{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);
   cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);background:none;
@@ -470,208 +481,231 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   <!-- ═══════════ GENERATOR PAGE ═══════════ -->
   <div class="pg" id="p-gen">
     <div class="ph">貼文產生器</div>
-    <div class="ps">獨立生成單篇貼文，或從行事曆格子進入</div>
 
-    <!-- Platform -->
-    <div class="card">
-      <div class="card-title">發布平台</div>
-      <div class="chip-group" id="plat-chips">
-        <button class="chip on" onclick="selChip(this,'plat','threads')">Threads</button>
-        <button class="chip" onclick="selChip(this,'plat','ig')">Instagram</button>
-        <button class="chip" onclick="selChip(this,'plat','fb')">Facebook</button>
-        <button class="chip" onclick="selChip(this,'plat','all')">三平台同步</button>
-      </div>
+    <!-- 模式切換 -->
+    <div class="mode-switch" id="gen-mode-switch">
+      <button class="mode-btn on" id="mode-btn-article" onclick="switchGenMode('article')">
+        <span style="font-size:18px">📝</span>
+        <span class="mode-btn-title">文章改寫</span>
+        <span class="mode-btn-sub">網址或文章 → 貼文</span>
+      </button>
+      <button class="mode-btn" id="mode-btn-photo" onclick="switchGenMode('photo')">
+        <span style="font-size:18px">📷</span>
+        <span class="mode-btn-title">看圖說故事</span>
+        <span class="mode-btn-sub">上傳圖片 → 貼文</span>
+      </button>
     </div>
 
-    <!-- Reference -->
-    <div class="card">
-      <div class="card-title">輸入來源 — 選一種或合併使用</div>
-
-      <!-- Source type tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:14px">
-        <button class="src-tab on" onclick="selSrcTab(this,'url')" id="src-tab-url">🔗 網址</button>
-        <button class="src-tab" onclick="selSrcTab(this,'text')" id="src-tab-text">📝 貼文章</button>
-        <button class="src-tab" onclick="selSrcTab(this,'img')" id="src-tab-img">📷 上傳圖片</button>
+    <!-- ── 模式 A：文章改寫 ── -->
+    <div id="gen-article">
+      <!-- 平台 -->
+      <div class="card">
+        <div class="card-title">發布平台</div>
+        <div class="chip-group" id="plat-chips">
+          <button class="chip on" onclick="selChip(this,'plat','threads')">Threads</button>
+          <button class="chip" onclick="selChip(this,'plat','ig')">Instagram</button>
+          <button class="chip" onclick="selChip(this,'plat','fb')">Facebook</button>
+          <button class="chip" onclick="selChip(this,'plat','all')">三平台同步</button>
+        </div>
       </div>
 
-      <!-- URL input -->
-      <div id="src-url">
-        <div id="url-list">
-          <div class="url-row" style="display:flex;gap:8px;margin-bottom:7px">
-            <input type="url" placeholder="貼上文章網址 https://..." class="url-inp">
-            <button class="btn btn-sm" style="flex-shrink:0" onclick="rmUrl(this)">✕</button>
+      <!-- 輸入來源 -->
+      <div class="card">
+        <div class="card-title">輸入來源</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <button class="src-tab on" onclick="selSrcTab(this,'url')" id="src-tab-url">🔗 網址</button>
+          <button class="src-tab" onclick="selSrcTab(this,'text')" id="src-tab-text">📝 貼文章</button>
+        </div>
+        <div id="src-url">
+          <div id="url-list">
+            <div class="url-row" style="display:flex;gap:8px;margin-bottom:7px">
+              <input type="url" placeholder="貼上文章網址 https://..." class="url-inp">
+              <button class="btn btn-sm" style="flex-shrink:0" onclick="rmUrl(this)">✕</button>
+            </div>
           </div>
+          <button class="btn btn-sm" onclick="addUrl()">+ 新增網址</button>
+          <div class="info info-blue" style="margin-top:8px;font-size:11px">💡 AI 會自動擷取文章重點，依選定口氣和風格重新包裝</div>
         </div>
-        <button class="btn btn-sm" onclick="addUrl()">+ 新增網址</button>
-        <div class="info info-blue" style="margin-top:8px;font-size:11px">
-          💡 AI 會自動擷取文章重點，依你選的口氣和風格重新包裝，不需要另外輸入主題
+        <div id="src-text" style="display:none">
+          <textarea id="article-txt" rows="7" placeholder="貼上文章原文、學員回饋、對話記錄...&#10;&#10;AI 會根據內容自動判斷核心論點，改寫成社群貼文"></textarea>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <label class="field-label">補充說明（可選）</label>
+          <textarea id="brief-txt" rows="2" placeholder="想強調的重點、給 AI 的補充指示..."></textarea>
         </div>
       </div>
 
-      <!-- Text input -->
-      <div id="src-text" style="display:none">
-        <textarea id="article-txt" rows="7" placeholder="貼上文章原文、學員回饋文字、對話紀錄...&#10;&#10;AI 會根據內容自動判斷核心論點，用你選的口氣改寫成社群貼文"></textarea>
+      <!-- 口氣 -->
+      <div class="card">
+        <div class="card-title">說話口氣 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">WHO</span></div>
+        <div class="opt-grid cols2" id="tone-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'tone','uncle')"><span class="ob-title">🧔 經驗大叔</span><span class="ob-sub">老大哥，直接務實，帶點權威但親切</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'tone','energetic')"><span class="ob-title">⚡ 熱情活力</span><span class="ob-sub">充滿幹勁，正向積極，讓人想行動</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'tone','edu')"><span class="ob-title">🎓 深度教育</span><span class="ob-sub">引用數據和研究，條理清晰</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'tone','humor')"><span class="ob-title">😄 幽默風趣</span><span class="ob-sub">輕鬆自嘲，笑完還能學到東西</span></button>
+        </div>
       </div>
 
-      <!-- Image input -->
-      <div id="src-img" style="display:none">
+      <!-- 風格 -->
+      <div class="card">
+        <div class="card-title">敘事風格 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">HOW</span></div>
+        <div class="opt-grid cols2" id="style-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'style','news')"><span class="ob-title">📰 新聞引用型</span><span class="ob-sub">具體來源開場，連貫論述，說服力強</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'style','story')"><span class="ob-title">📖 故事敘事型</span><span class="ob-sub">大叔視角，生活化比喻，起承轉合</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'style','list')"><span class="ob-title">📋 條列重點型</span><span class="ob-sub">快速掃讀，emoji 條列，重點清晰</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'style','contrast')"><span class="ob-title">🆚 對比反差型</span><span class="ob-sub">先破迷思再給正解，前後對照</span></button>
+        </div>
+      </div>
+
+      <!-- 發文目標 -->
+      <div class="card">
+        <div class="card-title">發文目標</div>
+        <div class="opt-grid cols2" id="goal-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'goal','acquire')"><span class="ob-title">🎯 開發潛在客戶</span><span class="ob-sub">引導試用 AI 教練</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'goal','brand')"><span class="ob-title">⭐ 品牌曝光</span><span class="ob-sub">強化 OnePack 大叔 IP</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'goal','engage')"><span class="ob-title">💬 互動留言</span><span class="ob-sub">問題結尾引發回覆</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'goal','vendor')"><span class="ob-title">🍱 版主留言</span><span class="ob-sub">讚美食物，帶入 AI 分析</span></button>
+        </div>
+      </div>
+
+      <!-- 寫作規則 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="card-title" style="margin-bottom:0">寫作規則</div>
+          <button class="btn btn-sm" onclick="saveRules()">儲存規則</button>
+        </div>
+        <textarea id="rules-txt" rows="3" placeholder="例：開頭必須引用具體數據、結尾一定有互動問句..."></textarea>
+        <div class="range-row" style="margin-top:12px">
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap">字數上限</span>
+          <input type="range" id="maxwords" min="80" max="600" step="10" value="250"
+            oninput="document.getElementById('mw-val').textContent=this.value+'字'">
+          <span class="range-val" id="mw-val">250字</span>
+        </div>
+      </div>
+
+      <!-- 產品導入 -->
+      <div class="card">
+        <div class="card-title">產品導入</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="prod-toggle" onchange="onProdToggle()" style="width:15px;height:15px">
+          <span style="font-size:13px;font-weight:500">導入 One Pack 產品</span>
+        </label>
+        <div id="prod-section" style="display:none">
+          <button class="btn btn-sm btn-green" onclick="recProducts()" id="rec-btn">🔍 AI 推薦相關產品</button>
+          <div id="rec-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+          <div id="rec-results" style="margin-top:8px"></div>
+          <div class="info info-amber" style="margin-top:6px;font-size:11px">⚠️ 只用生活化語氣，不宣稱療效</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="gen-btn" onclick="genPost(false)">✦ 生成貼文</button>
+    </div>
+
+    <!-- ── 模式 B：看圖說故事 ── -->
+    <div id="gen-photo" style="display:none">
+      <!-- 平台（共用但獨立 DOM） -->
+      <div class="card">
+        <div class="card-title">發布平台</div>
+        <div class="chip-group" id="photo-plat-chips">
+          <button class="chip on" onclick="selChip(this,'photoPlat','threads')">Threads</button>
+          <button class="chip" onclick="selChip(this,'photoPlat','ig')">Instagram</button>
+          <button class="chip" onclick="selChip(this,'photoPlat','fb')">Facebook</button>
+          <button class="chip" onclick="selChip(this,'photoPlat','all')">三平台同步</button>
+        </div>
+      </div>
+
+      <!-- 圖片上傳 -->
+      <div class="card">
+        <div class="card-title">上傳圖片</div>
         <div class="drop-zone" id="img-dropzone"
           onclick="document.getElementById('img-file-input').click()"
           ondragover="event.preventDefault()"
           ondrop="onImgDrop(event)">
           <div id="img-placeholder">
-            <div style="font-size:28px;margin-bottom:6px">📷</div>
+            <div style="font-size:32px;margin-bottom:8px">📷</div>
             <div style="font-size:13px;color:var(--muted)">點擊上傳 / 拖曳 / Ctrl+V 貼上截圖</div>
-            <div style="font-size:11px;color:var(--hint);margin-top:4px">支援 JPG、PNG、WEBP，食物照片、截圖皆可</div>
+            <div style="font-size:11px;color:var(--hint);margin-top:4px">支援 JPG、PNG、WEBP</div>
           </div>
-          <img id="img-preview" style="display:none;max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;border:1px solid var(--border)" alt="預覽">
+          <img id="img-preview" style="display:none;max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border)" alt="預覽">
         </div>
         <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="onImgFile(event)">
-        <div id="img-controls" style="display:none;margin-top:8px">
-          <div style="display:flex;align-items:center;gap:8px">
+        <div id="img-controls" style="display:none;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <span style="font-size:12px;color:var(--green);font-weight:600">✓ 圖片已載入</span>
             <button class="btn btn-sm" style="color:var(--red)" onclick="clearImg()">✕ 移除</button>
           </div>
-          <div style="margin-top:8px">
-            <label class="field-label">補充描述（可選）— 告訴 AI 這張圖的背景或你想強調的點</label>
-            <textarea id="img-desc" rows="2" placeholder="例：這是學員昨天的午餐便當，想分析這個搭配的營養和熱量..."></textarea>
-          </div>
-        </div>
-        <div class="info info-blue" style="margin-top:8px;font-size:11px" id="img-hint">
-          💡 上傳食物照片 → AI 分析營養並產出貼文；上傳截圖 → AI 根據截圖內容改寫成社群貼文
+          <label class="field-label">補充描述（可選）</label>
+          <textarea id="img-desc" rows="2" placeholder="例：這是學員昨天的午餐便當，想分析這個搭配的營養和熱量..."></textarea>
         </div>
       </div>
 
-      <!-- Supplement (always visible) -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <label class="field-label">補充說明 / 想強調的重點（可選）</label>
-        <textarea id="brief-txt" rows="2" placeholder="例：想強調 AI 飲食教練是免費的、想帶入 BUN 數值、這篇要 tag 食物版主..."></textarea>
-      </div>
-    </div>
-
-    <!-- Tone -->
-    <div class="card">
-      <div class="card-title">說話口氣 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">WHO — 用什麼身份說話</span></div>
-      <div class="opt-grid cols2" id="tone-grid">
-        <button class="opt-btn on" onclick="selOpt(this,'tone','uncle')">
-          <span class="ob-title">🧔 經驗大叔</span>
-          <span class="ob-sub">老大哥說話，直接務實，帶點權威但親切</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'tone','energetic')">
-          <span class="ob-title">⚡ 熱情活力</span>
-          <span class="ob-sub">充滿幹勁，正向積極，讓人感覺有衝勁</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'tone','edu')">
-          <span class="ob-title">🎓 深度教育</span>
-          <span class="ob-sub">引用數據和研究，條理清晰，像專業營養師</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'tone','humor')">
-          <span class="ob-title">😄 幽默風趣</span>
-          <span class="ob-sub">輕鬆自嘲，讓人會心一笑又能學到東西</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Style -->
-    <div class="card">
-      <div class="card-title">敘事風格 <span style="font-size:10px;color:var(--hint);font-weight:400;margin-left:4px">HOW — 用什麼結構說故事</span></div>
-      <div class="opt-grid cols2" id="style-grid">
-        <button class="opt-btn on" onclick="selOpt(this,'style','news')">
-          <span class="ob-title">📰 新聞引用型</span>
-          <span class="ob-sub">以研究/數據/媒體報導開場，有連貫論述，說服力強</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'style','story')">
-          <span class="ob-title">📖 故事敘事型</span>
-          <span class="ob-sub">第一人稱大叔視角，生活化比喻，起承轉合完整</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'style','list')">
-          <span class="ob-title">📋 條列重點型</span>
-          <span class="ob-sub">快速掃讀，emoji 條列，重點清晰</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'style','contrast')">
-          <span class="ob-title">🆚 對比反差型</span>
-          <span class="ob-sub">先破迷思再給正解，以前 vs 現在對照</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Goal -->
-    <div class="card">
-      <div class="card-title">發文目標</div>
-      <div class="opt-grid cols2" id="goal-grid">
-        <button class="opt-btn on" onclick="selOpt(this,'goal','acquire')">
-          <span class="ob-title">🎯 開發潛在客戶</span>
-          <span class="ob-sub">引導試用 AI 教練，Threads 主力</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'goal','brand')">
-          <span class="ob-title">⭐ 品牌曝光</span>
-          <span class="ob-sub">強化 OnePack 大叔 IP</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'goal','engage')">
-          <span class="ob-title">💬 互動留言</span>
-          <span class="ob-sub">問題結尾引發回覆，提升觸及</span>
-        </button>
-        <button class="opt-btn" onclick="selOpt(this,'goal','vendor')">
-          <span class="ob-title">🍱 版主留言</span>
-          <span class="ob-sub">讚美食物照片，帶入 AI 分析</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Writing rules & word count -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div class="card-title" style="margin-bottom:0">寫作規則</div>
-        <button class="btn btn-sm" onclick="saveRules()">儲存規則</button>
-      </div>
-      <textarea id="rules-txt" rows="4" placeholder="例：開頭必須引用具體數據或媒體來源、結尾一定有互動問句、不用「喔啊囉呢」..."></textarea>
-      <div class="range-row" style="margin-top:12px">
-        <span style="font-size:12px;color:var(--muted);white-space:nowrap">字數上限</span>
-        <input type="range" id="maxwords" min="80" max="600" step="10" value="250"
-          oninput="document.getElementById('mw-val').textContent=this.value+'字'">
-        <span class="range-val" id="mw-val">250字</span>
-      </div>
-    </div>
-
-    <!-- Product -->
-    <div class="card">
-      <div class="card-title">產品導入</div>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px">
-        <input type="checkbox" id="prod-toggle" onchange="onProdToggle()" style="width:15px;height:15px">
-        <span style="font-size:13px;font-weight:500">導入 One Pack 產品（每篇貼文都加入產品段落）</span>
-      </label>
-      <div id="prod-section" style="display:none">
-        <button class="btn btn-sm btn-green" onclick="recProducts()" id="rec-btn">🔍 AI 推薦相關產品</button>
-        <div id="rec-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
-        <div id="rec-results" style="margin-top:8px"></div>
-        <div class="info info-amber" style="margin-top:6px;font-size:11px">
-          ⚠️ 只用「補充、搭配、我自己也會用」等生活化語氣，不宣稱療效，符合公開貼文規範
+      <!-- 主題方向 -->
+      <div class="card">
+        <div class="card-title">主題方向 — AI 從哪個角度解讀這張圖</div>
+        <div class="opt-grid cols2" id="photo-topic-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'photoTopic','food')"><span class="ob-title">🍱 食物分析</span><span class="ob-sub">分析熱量、營養素、飲食建議</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','tool')"><span class="ob-title">🤖 工具展示</span><span class="ob-sub">展示 AI 教練如何分析這張圖</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','case')"><span class="ob-title">👤 使用者故事</span><span class="ob-sub">以圖片為背景說一個真實改變故事</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','myth')"><span class="ob-title">💡 飲食迷思</span><span class="ob-sub">用圖片破解一個常見的飲食誤解</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','qa')"><span class="ob-title">❓ 問答互動</span><span class="ob-sub">以圖片當引子，拋出互動問題</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','vendor')"><span class="ob-title">🍽️ 版主留言</span><span class="ob-sub">讚美這道料理並帶入 AI 分析</span></button>
         </div>
       </div>
+
+      <!-- 口氣（圖片模式） -->
+      <div class="card">
+        <div class="card-title">說話口氣</div>
+        <div class="opt-grid cols2" id="photo-tone-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'photoTone','uncle')"><span class="ob-title">🧔 經驗大叔</span><span class="ob-sub">老大哥，直接務實，帶點權威但親切</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTone','energetic')"><span class="ob-title">⚡ 熱情活力</span><span class="ob-sub">充滿幹勁，正向積極</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTone','edu')"><span class="ob-title">🎓 深度教育</span><span class="ob-sub">引用數據，條理清晰</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTone','humor')"><span class="ob-title">😄 幽默風趣</span><span class="ob-sub">輕鬆自嘲，笑完還能學到東西</span></button>
+        </div>
+      </div>
+
+      <!-- 風格（圖片模式） -->
+      <div class="card">
+        <div class="card-title">敘事風格</div>
+        <div class="opt-grid cols2" id="photo-style-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'photoStyle','story')"><span class="ob-title">📖 故事敘事型</span><span class="ob-sub">以圖片當開場，說一個有起承轉合的故事</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoStyle','list')"><span class="ob-title">📋 條列重點型</span><span class="ob-sub">快速條列圖片中的關鍵資訊</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoStyle','contrast')"><span class="ob-title">🆚 對比反差型</span><span class="ob-sub">看似普通的圖片，背後的驚人真相</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoStyle','news')"><span class="ob-title">📰 知識引用型</span><span class="ob-sub">以圖片為例，引用研究說明道理</span></button>
+        </div>
+      </div>
+
+      <!-- 發文目標（圖片模式） -->
+      <div class="card">
+        <div class="card-title">發文目標</div>
+        <div class="opt-grid cols2" id="photo-goal-grid">
+          <button class="opt-btn on" onclick="selOpt(this,'photoGoal','acquire')"><span class="ob-title">🎯 開發潛在客戶</span><span class="ob-sub">引導試用 AI 教練</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoGoal','engage')"><span class="ob-title">💬 互動留言</span><span class="ob-sub">問題結尾引發回覆</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoGoal','brand')"><span class="ob-title">⭐ 品牌曝光</span><span class="ob-sub">強化 OnePack 大叔 IP</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoGoal','vendor')"><span class="ob-title">🍱 版主留言</span><span class="ob-sub">讚美食物，帶入 AI 分析</span></button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="gen-photo-btn" onclick="genPhotoPost(false)">📷 生成看圖貼文</button>
     </div>
 
-    <button class="btn btn-primary btn-full" id="gen-btn" onclick="genPost(false)">✦ 生成貼文</button>
-
-    <!-- Output -->
+    <!-- 輸出區（兩個模式共用） -->
     <div id="out-wrap" style="display:none;margin-top:14px">
-      <!-- Single platform -->
       <div id="out-single">
         <div class="out-head">
-          <span class="out-label" id="out-plat-label">Threads 貼文</span>
+          <span class="out-label" id="out-plat-label">貼文</span>
           <span class="badge" id="out-wc">0 字</span>
         </div>
         <div class="out-box" id="out-txt"></div>
         <div class="brow">
           <button class="btn btn-green" onclick="cpOut()">⧉ 複製</button>
-          <button class="btn" onclick="genPost(true)">↻ 換個角度</button>
+          <button class="btn" onclick="regenCurrent()">↻ 換個角度</button>
           <button class="btn" onclick="savePost()">↓ 存入紀錄</button>
           <button class="btn" onclick="sendToCalPanel()" id="btn-to-cal">📅 放入行事曆</button>
         </div>
       </div>
-      <!-- Triple platform -->
       <div id="out-triple" style="display:none">
         <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="card" style="margin-bottom:0" id="out-th-card">
+          <div class="card" style="margin-bottom:0">
             <div class="out-head"><span style="font-size:12px;font-weight:700">Threads</span><span class="badge" id="wc-th">0 字</span></div>
             <div class="out-box" id="otxt-th" style="min-height:60px"></div>
             <div class="brow">
@@ -938,6 +972,12 @@ const G = {
   tone: 'uncle',
   style: 'news',
   goal: 'acquire',
+  genMode: 'article',
+  photoPlat: 'threads',
+  photoTopic: 'food',
+  photoTone: 'uncle',
+  photoStyle: 'story',
+  photoGoal: 'acquire',
   curOut: '',
   outs: {},
   weekOff: 0,
@@ -1002,6 +1042,107 @@ function showKeyOk(){
   if(mobIcon) mobIcon.textContent = '✅';
 }
 function saveRules(){ localStorage.setItem('writing_rules', document.getElementById('rules-txt').value); toast('寫作規則已儲存 ✓'); }
+
+// ═══════════════════════════════════════════════
+//  模式切換：文章改寫 / 看圖說故事
+// ═══════════════════════════════════════════════
+function switchGenMode(mode){
+  G.genMode = mode;
+  document.getElementById('gen-article').style.display = mode==='article' ? 'block' : 'none';
+  document.getElementById('gen-photo').style.display = mode==='photo' ? 'block' : 'none';
+  document.getElementById('mode-btn-article').classList.toggle('on', mode==='article');
+  document.getElementById('mode-btn-photo').classList.toggle('on', mode==='photo');
+  document.getElementById('out-wrap').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+//  看圖說故事生成
+// ═══════════════════════════════════════════════
+const PHOTO_TOPIC_PROMPT = {
+  food: '【主題方向：食物分析】仔細分析圖片中的食物，估算熱量（kcal）、蛋白質（g）、脂肪（g）、碳水（g），給出飲食建議。數字要具體，不要模糊。',
+  tool: '【主題方向：工具展示】以這張圖片為例，說明 AI 飲食教練如何幫使用者分析這類食物或情境，展示工具的實用價值。',
+  case: '【主題方向：使用者故事】以這張圖片為背景，創作一個真實感的使用者改變故事（匿名），說明從這個飲食習慣出發，如何透過 AI 教練改善健康。',
+  myth: '【主題方向：飲食迷思】以這張圖片為切入點，破解一個和這個食物或情境相關的常見飲食誤解，用具體數字說明真相。',
+  qa: '【主題方向：問答互動】以這張圖片為引子，設計一個讓讀者很容易回答的互動問題，引發留言討論。',
+  vendor: '【主題方向：版主留言】這是要貼在食物版主留言區的內容。先真誠讚美圖片中的料理（2句），再提供這道食物的大概營養估算，最後自然帶入 AI 飲食教練。',
+};
+
+async function genPhotoPost(regen){
+  if(!G.apiKey){ toast('請先輸入並儲存 API Key'); return; }
+  if(!G.img64){ toast('請先上傳圖片'); return; }
+  const plat = G.photoPlat || 'threads';
+  const topic = G.photoTopic || 'food';
+  const tone = G.photoTone || 'uncle';
+  const style = G.photoStyle || 'story';
+  const goal = G.photoGoal || 'acquire';
+  const imgDesc = document.getElementById('img-desc')?.value.trim() || '';
+  const maxW = {threads:220, ig:300, fb:450, all:300}[plat] || 220;
+  const imgNote = `【圖片輸入】上方附有一張圖片，請先仔細分析圖片內容，再根據以下主題方向產出貼文。${imgDesc ? '\n使用者補充說明：'+imgDesc : ''}`;
+  const regenNote = regen ? '\n（⚠️ 請從完全不同角度切入，不要和上一版重複）' : '';
+
+  function buildPhotoPrompt(p){
+    return `${ONEPACK_BASE}
+
+平台規格：${PLAT_SPEC[p]?.desc || PLAT_SPEC.threads.desc}
+字數上限：${({threads:220,ig:300,fb:450}[p]||220)} 字以內
+
+${TONE_PROMPT[tone]}
+
+${STYLE_PROMPT[style]}
+
+${GOAL_PROMPT[goal]}
+
+${PHOTO_TOPIC_PROMPT[topic]}
+
+${imgNote}${regenNote}
+
+請直接輸出貼文本體，不要加任何前言或說明。`;
+  }
+
+  const btn = document.getElementById('gen-photo-btn');
+  btn.disabled=true; btn.innerHTML='<div class="spin"></div> 分析圖片中...';
+  document.getElementById('out-wrap').style.display='block';
+
+  try{
+    if(plat==='all'){
+      document.getElementById('out-single').style.display='none';
+      document.getElementById('out-triple').style.display='block';
+      document.getElementById('otxt-th').textContent='分析中...';
+      document.getElementById('otxt-fb').textContent='等待中...';
+      const [txtTh, txtFb] = await Promise.all([
+        callAPI(buildPhotoPrompt('threads'), G.img64),
+        callAPI(buildPhotoPrompt('fb'), G.img64),
+      ]);
+      G.outs={threads:txtTh, fb:txtFb};
+      document.getElementById('otxt-th').textContent=txtTh;
+      document.getElementById('otxt-fb').textContent=txtFb;
+      document.getElementById('wc-th').textContent=[...txtTh].length+'字';
+      document.getElementById('wc-fb').textContent=[...txtFb].length+'字';
+      G.stats.threads++; G.stats.fb++; G.stats.total+=2;
+    } else {
+      document.getElementById('out-single').style.display='block';
+      document.getElementById('out-triple').style.display='none';
+      document.getElementById('out-txt').textContent='分析圖片中...';
+      const txt = await callAPI(buildPhotoPrompt(plat), G.img64);
+      G.curOut=txt; G.curMode='photo';
+      document.getElementById('out-txt').textContent=txt;
+      document.getElementById('out-wc').textContent=[...txt].length+'字';
+      document.getElementById('out-plat-label').textContent=(PLAT_SPEC[plat]?.label||plat)+' · 看圖說故事';
+      G.stats[plat==='fb'?'fb':'threads']++; G.stats.total++;
+    }
+    document.getElementById('out-tip').textContent='💡 圖片本身就是最好的配圖，直接搭配這篇貼文發出';
+    localStorage.setItem('stats_v2', JSON.stringify(G.stats));
+    updStats();
+  } catch(e){
+    document.getElementById('out-txt').textContent='錯誤：'+e.message;
+  }
+  btn.disabled=false; btn.innerHTML='📷 生成看圖貼文';
+}
+
+function regenCurrent(){
+  if(G.genMode==='photo') genPhotoPost(true);
+  else genPost(true);
+}
 
 // ═══════════════════════════════════════════════
 //  CHIP / OPT SELECTION
