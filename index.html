@@ -739,13 +739,13 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   <button class="mob-nav-btn center" id="mn-gen" onclick="go('gen')">
     <span class="mob-icon">✦</span>
   </button>
-  <button class="mob-nav-btn" id="mn-products" onclick="go('products')">
-    <span class="mob-icon">🧪</span>
-    <span class="mob-label">產品</span>
-  </button>
   <button class="mob-nav-btn" id="mn-hist" onclick="go('hist')">
     <span class="mob-icon">◷</span>
     <span class="mob-label">紀錄</span>
+  </button>
+  <button class="mob-nav-btn" onclick="openKeySettings()">
+    <span class="mob-icon" id="mob-key-icon">🔑</span>
+    <span class="mob-label">API Key</span>
   </button>
 </nav>
 
@@ -998,6 +998,8 @@ function saveKey(){
 function showKeyOk(){
   document.getElementById('kbar').style.background = '#F0FDF4';
   document.getElementById('kbar-ok').style.display = 'inline';
+  const mobIcon = document.getElementById('mob-key-icon');
+  if(mobIcon) mobIcon.textContent = '✅';
 }
 function saveRules(){ localStorage.setItem('writing_rules', document.getElementById('rules-txt').value); toast('寫作規則已儲存 ✓'); }
 
@@ -1022,8 +1024,114 @@ function selOpt(btn, key, val){
 }
 
 // ═══════════════════════════════════════════════
-//  SOURCE TAB & IMAGE
+//  PANEL 專用：圖片 tab、圖片上傳、產品推薦
 // ═══════════════════════════════════════════════
+function pSelSrc(btn, tab){
+  ['url','text','img'].forEach(t=>{
+    const tabBtn = document.getElementById('p-src-'+t);
+    const body = document.getElementById('p-src-'+t+'-body');
+    if(tabBtn) tabBtn.classList.toggle('on', t===tab);
+    if(body) body.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+function pOnImgFile(e){
+  if(e.target.files[0]) pLoadImg(e.target.files[0]);
+}
+function pOnImgDrop(e){
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if(f && f.type.startsWith('image/')) pLoadImg(f);
+}
+function pLoadImg(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    G.panelImg64 = ev.target.result.split(',')[1];
+    const preview = document.getElementById('p-img-preview');
+    if(preview){ preview.src = ev.target.result; preview.style.display='block'; }
+    const ph = document.getElementById('p-img-ph');
+    if(ph) ph.style.display='none';
+    const ctrl = document.getElementById('p-img-ctrl');
+    if(ctrl) ctrl.style.display='flex';
+    const dz = document.getElementById('p-img-dz');
+    if(dz) dz.classList.add('has');
+  };
+  reader.readAsDataURL(file);
+}
+function pClearImg(){
+  G.panelImg64 = null;
+  const preview = document.getElementById('p-img-preview');
+  if(preview){ preview.style.display='none'; preview.src=''; }
+  const ph = document.getElementById('p-img-ph');
+  if(ph) ph.style.display='block';
+  const ctrl = document.getElementById('p-img-ctrl');
+  if(ctrl) ctrl.style.display='none';
+  const dz = document.getElementById('p-img-dz');
+  if(dz) dz.classList.remove('has');
+}
+function pOnProdToggle(){
+  const on = document.getElementById('p-prod-toggle')?.checked;
+  const sec = document.getElementById('p-prod-section');
+  if(sec) sec.style.display = on ? 'block' : 'none';
+  if(!on){ G.panelApprovedProds=[]; }
+}
+async function pRecProducts(){
+  if(!G.apiKey){ toast('請先儲存 API Key'); return; }
+  const btn = document.getElementById('p-rec-btn');
+  btn.disabled=true; btn.innerHTML='<div class="spin spin-dark"></div> 分析中...';
+  const hint = document.getElementById('p-topic')?.value || document.getElementById('p-url')?.value || '';
+  const kb = loadProducts().map(p=>`[${p.id}] ${p.name}（${p.cat}）成分:${p.key}`).join('\n');
+  try{
+    const raw = await callAPI(`你是 OnePack 大叔的產品顧問。分析以下主題，從產品庫挑選 1–3 項最相關的產品。
+主題：${hint}
+產品庫：\n${kb}
+規則：只能從上面挑，不可編造。沒有相關的回傳 []。
+只輸出JSON陣列，不加說明：[{"id":"id","name":"名稱","reason":"15字內"}]`);
+    const cleaned = raw.trim().replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'');
+    const recs = JSON.parse(cleaned);
+    G.panelLastRecs = recs;
+    G.panelApprovedProds = [];
+    const resultsEl = document.getElementById('p-rec-results');
+    const statusEl = document.getElementById('p-rec-status');
+    if(!recs.length){
+      resultsEl.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px">這篇主題關聯性低，建議純知識分享</div>';
+    } else {
+      resultsEl.innerHTML = recs.map((r,i)=>`
+        <div class="rec-card" id="prc-${i}" onclick="pToggleRec(${i})">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <input type="checkbox" id="prcb-${i}" onclick="event.stopPropagation();pToggleRec(${i})" style="width:14px;height:14px">
+            <span style="font-size:13px;font-weight:600">${esc(r.name)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);padding-left:22px">${esc(r.reason)}</div>
+        </div>`).join('');
+      statusEl.textContent='✓ 勾選想導入的產品';
+    }
+  } catch(e){ document.getElementById('p-rec-status').textContent='推薦失敗：'+e.message; }
+  btn.disabled=false; btn.innerHTML='🔍 AI 推薦相關產品';
+}
+function pToggleRec(i){
+  const cb = document.getElementById('prcb-'+i);
+  const card = document.getElementById('prc-'+i);
+  cb.checked = !cb.checked;
+  card.classList.toggle('sel', cb.checked);
+  G.panelApprovedProds = (G.panelLastRecs||[]).filter((_,idx)=>document.getElementById('prcb-'+idx)?.checked);
+}
+
+// ═══════════════════════════════════════════════
+//  手機版 API Key 設定（從設定入口進入）
+// ═══════════════════════════════════════════════
+function openKeySettings(){
+  const current = G.apiKey ? '••••••••'+G.apiKey.slice(-6) : '尚未設定';
+  const newKey = prompt(`API Key 設定\n目前：${current}\n\n請輸入新的 API Key（輸入後按確定）：`);
+  if(newKey === null) return;
+  if(!newKey.trim()){ toast('未輸入 Key，取消操作'); return; }
+  G.apiKey = newKey.trim();
+  localStorage.setItem('ak', G.apiKey);
+  document.getElementById('kip').value = G.apiKey;
+  showKeyOk();
+  toast('API Key 已儲存 ✓');
+}
+
 function selSrcTab(btn, tab){
   document.querySelectorAll('.src-tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
@@ -1527,24 +1635,65 @@ async function genWeek(){
 // ═══════════════════════════════════════════════
 function openPanel(dateKey){
   G.panelDate = dateKey;
+  G.panelImg64 = null; // reset image for this panel session
   const data = G.calData[dateKey] || {};
   const d = new Date(dateKey);
-  document.getElementById('panel-title').textContent = `${d.getMonth()+1}/${d.getDate()} 設定`;
+  document.getElementById('panel-title').textContent = `${d.getMonth()+1}/${d.getDate()}（週${DOW[d.getDay()]}）設定`;
 
   document.getElementById('panel-body').innerHTML = `
-    <div style="margin-bottom:12px">
+    <div style="margin-bottom:14px">
       <label class="field-label">主題 / 標題</label>
       <input type="text" id="p-topic" value="${esc(data.topic||'')}" placeholder="這篇要聊什麼？">
     </div>
-    <div style="margin-bottom:12px">
-      <label class="field-label">參考文章網址</label>
-      <input type="url" id="p-url" value="${esc(data.url||'')}" placeholder="https://...">
+
+    <!-- 輸入來源 tabs -->
+    <div style="margin-bottom:14px">
+      <label class="field-label">輸入來源</label>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="src-tab ${!data.img64?'on':''}" onclick="pSelSrc(this,'url')" id="p-src-url">🔗 網址</button>
+        <button class="src-tab" onclick="pSelSrc(this,'text')" id="p-src-text">📝 貼文章</button>
+        <button class="src-tab ${data.img64?'on':''}" onclick="pSelSrc(this,'img')" id="p-src-img">📷 圖片</button>
+      </div>
+
+      <div id="p-src-url-body">
+        <input type="url" id="p-url" value="${esc(data.url||'')}" placeholder="https://...">
+        <div style="font-size:11px;color:var(--hint);margin-top:4px">AI 會自動擷取文章重點改寫</div>
+      </div>
+      <div id="p-src-text-body" style="display:none">
+        <textarea id="p-article" rows="5" placeholder="貼上文章原文、學員回饋、對話記錄...">${esc(data.article||'')}</textarea>
+      </div>
+      <div id="p-src-img-body" style="display:none">
+        <div class="drop-zone ${data.img64?'has':''}" id="p-img-dz"
+          onclick="document.getElementById('p-img-file').click()"
+          ondragover="event.preventDefault()"
+          ondrop="pOnImgDrop(event)">
+          <div id="p-img-ph" style="${data.img64?'display:none':''}">
+            <div style="font-size:24px;margin-bottom:4px">📷</div>
+            <div style="font-size:12px;color:var(--muted)">點擊上傳 / 拖曳</div>
+          </div>
+          <img id="p-img-preview" style="max-width:100%;max-height:150px;border-radius:6px;${data.img64?'':'display:none'}"
+            src="${data.img64?'data:image/jpeg;base64,'+data.img64:''}" alt="">
+        </div>
+        <input type="file" id="p-img-file" accept="image/*" style="display:none" onchange="pOnImgFile(event)">
+        <div id="p-img-ctrl" style="${data.img64?'':'display:none'};margin-top:6px;display:${data.img64?'flex':'none'};align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--green);font-weight:600">✓ 圖片已載入</span>
+          <button class="btn btn-sm" style="color:var(--red)" onclick="pClearImg()">✕ 移除</button>
+        </div>
+        <div style="margin-top:8px">
+          <label class="field-label">補充描述（可選）</label>
+          <input type="text" id="p-img-desc" value="${esc(data.imgDesc||'')}" placeholder="例：學員的午餐便當，想分析營養...">
+        </div>
+      </div>
     </div>
-    <div style="margin-bottom:12px">
-      <label class="field-label">或貼入文章內容</label>
-      <textarea id="p-article" rows="4" placeholder="貼上文章原文...">${esc(data.article||'')}</textarea>
+
+    <!-- 補充說明 -->
+    <div style="margin-bottom:14px">
+      <label class="field-label">補充說明 / 想強調的重點</label>
+      <textarea id="p-brief" rows="2" placeholder="想強調的重點、給 AI 的補充指示...">${esc(data.brief||'')}</textarea>
     </div>
-    <div class="g2" style="margin-bottom:12px">
+
+    <!-- 平台、口氣、風格、目標 -->
+    <div class="g2" style="margin-bottom:10px">
       <div>
         <label class="field-label">平台</label>
         <select id="p-plat">
@@ -1555,13 +1704,16 @@ function openPanel(dateKey){
         </select>
       </div>
       <div>
-        <label class="field-label">主題類型</label>
-        <select id="p-type">
-          ${Object.entries(TOPICS_DEF).map(([k,v])=>`<option value="${k}" ${(data.type||'food')===k?'selected':''}>${v.icon} ${v.name}</option>`).join('')}
+        <label class="field-label">發文目標</label>
+        <select id="p-goal">
+          <option value="acquire" ${(data.goal||'acquire')==='acquire'?'selected':''}>🎯 開發潛在客戶</option>
+          <option value="engage" ${data.goal==='engage'?'selected':''}>💬 互動留言</option>
+          <option value="brand" ${data.goal==='brand'?'selected':''}>⭐ 品牌曝光</option>
+          <option value="vendor" ${data.goal==='vendor'?'selected':''}>🍱 版主留言</option>
         </select>
       </div>
     </div>
-    <div class="g2" style="margin-bottom:12px">
+    <div class="g2" style="margin-bottom:10px">
       <div>
         <label class="field-label">說話口氣</label>
         <select id="p-tone">
@@ -1581,56 +1733,61 @@ function openPanel(dateKey){
         </select>
       </div>
     </div>
-    <div style="margin-bottom:12px">
-      <label class="field-label">發文目標</label>
-      <select id="p-goal">
-        <option value="acquire" ${(data.goal||'acquire')==='acquire'?'selected':''}>🎯 開發潛在客戶</option>
-        <option value="engage" ${data.goal==='engage'?'selected':''}>💬 互動留言</option>
-        <option value="brand" ${data.goal==='brand'?'selected':''}>⭐ 品牌曝光</option>
-        <option value="vendor" ${data.goal==='vendor'?'selected':''}>🍱 版主留言</option>
-      </select>
+
+    <!-- 產品導入 -->
+    <div style="margin-bottom:14px;padding:12px;background:var(--bg);border-radius:var(--rs);border:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="p-prod-toggle" onchange="pOnProdToggle()" style="width:15px;height:15px" ${data.prodEnabled?'checked':''}>
+        <span style="font-size:13px;font-weight:500">導入 One Pack 產品</span>
+      </label>
+      <div id="p-prod-section" style="display:${data.prodEnabled?'block':'none'};margin-top:10px">
+        <button class="btn btn-sm btn-green" onclick="pRecProducts()" id="p-rec-btn">🔍 AI 推薦相關產品</button>
+        <div id="p-rec-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+        <div id="p-rec-results" style="margin-top:8px"></div>
+        <div class="info info-amber" style="margin-top:6px;font-size:11px">⚠️ 只用生活化語氣，不宣稱療效</div>
+      </div>
     </div>
+
+    <!-- 已生成草稿 -->
     ${data.text ? `
-    <div style="margin-top:4px">
+    <div style="padding-top:14px;border-top:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <label class="field-label" style="margin-bottom:0;color:var(--green);font-weight:700">✓ 已生成貼文草稿（可直接編輯）</label>
-        <span class="editor-wc" id="p-wc" style="margin:0">${[...data.text].length} 字</span>
+        <span style="font-size:11px;color:var(--hint)">${[...data.text].length} 字</span>
       </div>
       <div class="editor-toolbar">
-        <button onclick="edCmd('bold')" title="粗體"><b>B</b></button>
-        <button onclick="edCmd('italic')" title="斜體"><i>I</i></button>
+        <button onclick="edCmd('bold')"><b>B</b></button>
+        <button onclick="edCmd('italic')"><i>I</i></button>
         <div class="sep"></div>
-        <button onclick="edInsert('\\n')" title="換行">↵</button>
-        <button onclick="edInsert('\\n\\n')" title="空行">¶</button>
+        <button onclick="edInsert('1️⃣ ')">1️⃣</button>
+        <button onclick="edInsert('2️⃣ ')">2️⃣</button>
+        <button onclick="edInsert('3️⃣ ')">3️⃣</button>
+        <button onclick="edInsert('✅ ')">✅</button>
+        <button onclick="edInsert('👇 ')">👇</button>
+        <button onclick="edInsert('🔥 ')">🔥</button>
+        <button onclick="edInsert('💡 ')">💡</button>
         <div class="sep"></div>
-        <button onclick="edInsert('1️⃣ ')" title="1️⃣">1️⃣</button>
-        <button onclick="edInsert('2️⃣ ')" title="2️⃣">2️⃣</button>
-        <button onclick="edInsert('3️⃣ ')" title="3️⃣">3️⃣</button>
-        <button onclick="edInsert('✅ ')" title="✅">✅</button>
-        <button onclick="edInsert('❌ ')" title="❌">❌</button>
-        <button onclick="edInsert('👇 ')" title="👇">👇</button>
-        <button onclick="edInsert('🔥 ')" title="🔥">🔥</button>
-        <button onclick="edInsert('💡 ')" title="💡">💡</button>
-        <button onclick="edInsert('📊 ')" title="📊">📊</button>
-        <button onclick="edInsert('⚠️ ')" title="⚠️">⚠️</button>
+        <button onclick="toggleEmojiPicker(event)" id="emoji-toggle-btn">😊</button>
         <div class="sep"></div>
-        <button onclick="toggleEmojiPicker(event)" title="更多 emoji" id="emoji-toggle-btn">😊 更多</button>
-        <div class="sep"></div>
-        <button onclick="edInsert('${COACH_URL}')" title="插入教練連結" style="font-size:11px">🔗 連結</button>
-        <button onclick="edInsert('#OnePack大叔 #211餐盤 #代謝優化')" style="font-size:11px"># 標籤</button>
+        <button onclick="edInsert('${COACH_URL}')" style="font-size:11px">🔗</button>
+        <button onclick="edInsert('#OnePack大叔 #211餐盤 #代謝優化')" style="font-size:11px">#</button>
       </div>
       <div class="editor-content" id="p-editor" contenteditable="true"
-        oninput="onEditorInput('${dateKey}')"
-        onkeydown="onEditorKey(event)"
-        spellcheck="false">${esc(data.text)}</div>
+        oninput="onEditorInput('${dateKey}')" spellcheck="false">${esc(data.text)}</div>
       <div class="editor-wc" id="p-wc-bar"></div>
       <div class="brow" style="margin-top:8px">
         <button class="btn btn-green btn-sm" onclick="cpEditor()">⧉ 複製</button>
-        <button class="btn btn-sm" onclick="saveEditorToHist('${dateKey}')">↓ 存入紀錄</button>
+        <button class="btn btn-sm" onclick="saveEditorToHist('${dateKey}')">↓ 存入</button>
         <button class="btn btn-sm" onclick="regenPanel()">↻ 重新生成</button>
         <button class="btn btn-sm" style="color:var(--red)" onclick="clearPanelDraft('${dateKey}')">✕ 清除</button>
       </div>
     </div>` : ''}`;
+
+  // 初始化 img tab 狀態
+  if(data.img64){
+    G.panelImg64 = data.img64;
+    pSelSrc(document.getElementById('p-src-img'), 'img');
+  }
 
   document.getElementById('panel-overlay').classList.add('open');
   document.getElementById('panel').classList.add('open');
@@ -1651,14 +1808,18 @@ function panelSave(){
   const existing = G.calData[G.panelDate] || {};
   G.calData[G.panelDate] = {
     ...existing,
-    topic: document.getElementById('p-topic').value.trim(),
-    url: document.getElementById('p-url').value.trim(),
-    article: document.getElementById('p-article').value.trim(),
-    plat: document.getElementById('p-plat').value,
-    type: document.getElementById('p-type').value,
-    tone: document.getElementById('p-tone').value,
-    style: document.getElementById('p-style').value,
-    goal: document.getElementById('p-goal').value,
+    topic: document.getElementById('p-topic')?.value.trim() || '',
+    url: document.getElementById('p-url')?.value.trim() || '',
+    article: document.getElementById('p-article')?.value.trim() || '',
+    brief: document.getElementById('p-brief')?.value.trim() || '',
+    imgDesc: document.getElementById('p-img-desc')?.value.trim() || '',
+    img64: G.panelImg64 || existing.img64 || null,
+    plat: document.getElementById('p-plat')?.value || 'threads',
+    type: existing.type || 'food',
+    tone: document.getElementById('p-tone')?.value || 'uncle',
+    style: document.getElementById('p-style')?.value || 'news',
+    goal: document.getElementById('p-goal')?.value || 'acquire',
+    prodEnabled: document.getElementById('p-prod-toggle')?.checked || false,
   };
   localStorage.setItem('cal_v2', JSON.stringify(G.calData));
   renderCal();
@@ -1670,13 +1831,20 @@ async function panelGen(){
   panelSave();
   const data = G.calData[G.panelDate];
   const urls = data.url ? [data.url] : [];
+  const img64 = G.panelImg64 || data.img64 || null;
+  const brief = (document.getElementById('p-brief')?.value || data.brief || data.topic || '').trim();
+  const imgDesc = (document.getElementById('p-img-desc')?.value || data.imgDesc || '').trim();
+  const effectiveBrief = img64 && imgDesc ? imgDesc + (brief ? '\n'+brief : '') : brief;
+  const prodEnabled = document.getElementById('p-prod-toggle')?.checked || false;
+  const prodApproved = prodEnabled ? (G.panelApprovedProds || []) : [];
+
   const cfg = {
-    plat: data.plat, type: data.type, tone: data.tone||'uncle',
-    style: data.style, goal: data.goal,
-    urls, article: data.article||'', brief: data.topic||'',
+    plat: data.plat, type: data.type||'food', tone: data.tone||'uncle',
+    style: data.style||'news', goal: data.goal||'acquire',
+    urls, article: data.article||'', brief: effectiveBrief,
     rules: localStorage.getItem('writing_rules')||'',
-    maxW: PLAT_SPEC[data.plat]?.chars || 220,
-    regen: false, prodApproved: [],
+    maxW: {threads:220,ig:300,fb:450,all:300}[data.plat]||220,
+    regen: false, prodApproved, img64,
   };
 
   const btn = document.getElementById('panel-gen-btn');
@@ -1685,15 +1853,15 @@ async function panelGen(){
   try{
     if(data.plat==='all'){
       const [txtTh, txtFb] = await Promise.all([
-        callAPI(buildPrompt({...cfg,plat:'threads',maxW:220})),
-        callAPI(buildPrompt({...cfg,plat:'fb',maxW:400})),
+        callAPI(buildPrompt({...cfg,plat:'threads',maxW:220}), img64),
+        callAPI(buildPrompt({...cfg,plat:'fb',maxW:450}), img64),
       ]);
       G.calData[G.panelDate].text = txtTh;
       G.calData[G.panelDate].text_fb = txtFb;
       G.calData[G.panelDate].text_all = `【Threads】\n${txtTh}\n\n【FB+IG】\n${txtFb}`;
       G.stats.total+=2; G.stats.threads++; G.stats.fb++;
     } else {
-      const txt = await callAPI(buildPrompt(cfg));
+      const txt = await callAPI(buildPrompt(cfg), img64);
       G.calData[G.panelDate].text = txt;
       G.stats.total++; G.stats[data.plat==='fb'?'fb':'threads']++;
     }
