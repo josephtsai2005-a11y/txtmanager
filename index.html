@@ -274,10 +274,101 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
 .cal-modal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--hint);padding:2px 0}
 
 @media(max-width:700px){
+  /* ── 隱藏桌機側欄 ── */
   .sb{display:none}
-  .panel{width:100%}
+
+  /* ── 主體佔滿全寬，底部留空間給導航列 ── */
+  .main{width:100vw}
+  .pg{padding:12px 14px 80px}
+
+  /* ── API Key bar 精簡化 ── */
+  .kbar{padding:6px 10px;gap:6px;flex-wrap:wrap}
+  .kbar span:first-child{display:none}
+  .kbar > span:nth-child(2){display:none}
+  .kbar input{font-size:11px;padding:4px 7px}
+  .kbtn{padding:4px 10px;font-size:11px}
+  .kbar-status{font-size:10px}
+
+  /* ── Grid 全部改單欄 ── */
   .g2,.g3,.opt-grid.cols2,.opt-grid.cols3,.topic-grid{grid-template-columns:1fr}
-  .pg{padding:14px}
+
+  /* ── Opt buttons 手機字體加大 ── */
+  .opt-btn{padding:12px 14px}
+  .opt-btn .ob-title{font-size:14px}
+  .opt-btn .ob-sub{font-size:12px}
+
+  /* ── 行事曆手機：改成垂直列表 ── */
+  .cal-wrap{grid-template-columns:1fr;gap:6px}
+  .cal-head-row{display:none}
+  .cal-cell{min-height:auto;padding:10px 12px;display:flex;align-items:center;gap:10px}
+  .cal-date{font-size:13px;font-weight:700;color:var(--text);margin:0;min-width:28px}
+  .cal-topic{font-size:13px;flex:1}
+  .cal-plat{margin:0}
+  .cal-status{position:static;margin-left:auto}
+  .cal-cell.rest{display:none}
+
+  /* ── Panel 全螢幕 ── */
+  .panel{width:100%;border-left:none;border-top:1px solid var(--border)}
+  .panel-body{padding:14px}
+  .panel-foot{padding:10px 14px}
+
+  /* ── 行事曆 modal 全螢幕 ── */
+  .cal-modal{width:100%;top:auto;bottom:0;left:0;transform:none;border-radius:var(--r) var(--r) 0 0;max-height:85vh}
+  .cal-modal.open{transform:none}
+  .cal-modal-overlay.open{display:block}
+
+  /* ── 按鈕加大可點擊區域 ── */
+  .btn{padding:10px 14px;font-size:14px}
+  .btn-sm{padding:8px 12px;font-size:13px}
+  .brow{gap:6px}
+  .btn-full{padding:14px;font-size:15px}
+
+  /* ── Chip 加大 ── */
+  .chip{padding:8px 14px;font-size:13px}
+  .src-tab{padding:9px 16px;font-size:13px}
+
+  /* ── Toast 往上移避免被底部導航遮住 ── */
+  .toast{bottom:74px}
+
+  /* ── 輸出區塊 ── */
+  .out-box{font-size:14px;line-height:1.85;padding:12px}
+
+  /* ── Editor toolbar 手機換行 ── */
+  .editor-toolbar{gap:3px}
+  .editor-toolbar button{padding:6px 7px;font-size:14px}
+
+  /* ── Emoji picker 全寬 ── */
+  .emoji-picker{width:calc(100vw - 28px);left:0 !important}
+  .emoji-grid{grid-template-columns:repeat(9,1fr)}
+  .emoji-btn{font-size:20px;padding:6px}
+}
+
+/* ── 底部導航列（手機專用）── */
+.mob-nav{display:none}
+@media(max-width:700px){
+  .mob-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--card);border-top:1px solid var(--border);
+    z-index:90;padding:0;height:60px;
+    box-shadow:0 -2px 10px rgba(0,0,0,.08)
+  }
+  .mob-nav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;background:none;border:none;cursor:pointer;
+    font-size:10px;font-weight:500;color:var(--muted);font-family:inherit;
+    padding:8px 4px;transition:color .12s;-webkit-tap-highlight-color:transparent
+  }
+  .mob-nav-btn.on{color:var(--green)}
+  .mob-nav-btn .mob-icon{font-size:20px;line-height:1}
+  .mob-nav-btn .mob-label{font-size:10px;line-height:1}
+  /* 中間大按鈕（貼文產生器）*/
+  .mob-nav-btn.center{
+    background:var(--green);border-radius:50%;width:52px;height:52px;
+    margin-top:-14px;box-shadow:0 4px 12px rgba(26,107,60,.35);
+    color:#fff;flex-shrink:0;flex-grow:0
+  }
+  .mob-nav-btn.center .mob-icon{font-size:22px}
+  .mob-nav-btn.center .mob-label{display:none}
 }
 </style>
 </head>
@@ -635,6 +726,29 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   </div>
 </div><!-- /main -->
 
+<!-- 手機底部導航列 -->
+<nav class="mob-nav">
+  <button class="mob-nav-btn on" id="mn-cal" onclick="go('cal')">
+    <span class="mob-icon">▦</span>
+    <span class="mob-label">行事曆</span>
+  </button>
+  <button class="mob-nav-btn" id="mn-topics" onclick="go('topics')">
+    <span class="mob-icon">◈</span>
+    <span class="mob-label">主題庫</span>
+  </button>
+  <button class="mob-nav-btn center" id="mn-gen" onclick="go('gen')">
+    <span class="mob-icon">✦</span>
+  </button>
+  <button class="mob-nav-btn" id="mn-products" onclick="go('products')">
+    <span class="mob-icon">🧪</span>
+    <span class="mob-label">產品</span>
+  </button>
+  <button class="mob-nav-btn" id="mn-hist" onclick="go('hist')">
+    <span class="mob-icon">◷</span>
+    <span class="mob-label">紀錄</span>
+  </button>
+</nav>
+
 <!-- ═══════════ PANEL (calendar cell editor) ═══════════ -->
 <div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel">
@@ -856,8 +970,14 @@ const G = {
 function go(n){
   document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
   document.getElementById('p-'+n).classList.add('active');
+  // 桌機側欄
   document.querySelectorAll('.nav').forEach((b,i) => {
     b.classList.toggle('on', ['cal','topics','gen','products','hist'][i] === n);
+  });
+  // 手機底部導航
+  ['cal','topics','gen','products','hist'].forEach(k=>{
+    const btn = document.getElementById('mn-'+k);
+    if(btn) btn.classList.toggle('on', k===n);
   });
   if(n==='hist') renderHist();
   if(n==='products') renderProducts();
@@ -1358,8 +1478,8 @@ function renderCal(){
     if(data?.text) cls+=' has-post';
     if(isSun) cls+=' rest';
     cell.className = cls;
-    cell.innerHTML = `<div class="cal-date">${d.getDate()}</div>` +
-      (data?.topic ? `<div class="cal-topic">${esc(data.topic)}</div>` : `<div class="cal-topic" style="color:var(--hint);font-size:9px">${isSun?'休息':'點擊設定'}</div>`) +
+    cell.innerHTML = `<div class="cal-date">${DOW[d.getDay()]} ${d.getDate()}</div>` +
+      (data?.topic ? `<div class="cal-topic">${esc(data.topic)}</div>` : `<div class="cal-topic" style="color:var(--hint);font-size:12px">${isSun?'休息':'點擊設定'}</div>`) +
       (data?.plat ? `<div class="cal-plat"><span class="plat-dot" style="background:${PLAT_COLORS[data.plat]?.[0]};color:${PLAT_COLORS[data.plat]?.[1]}">${PLAT_SPEC[data.plat]?.label||data.plat}</span></div>` : '') +
       (data?.text ? '<div class="cal-status"></div>' : '');
     if(!isSun) cell.onclick = () => openPanel(key);
