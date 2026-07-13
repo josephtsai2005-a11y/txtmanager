@@ -474,6 +474,8 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
       <button class="tab" onclick="filterTopics(this,'tool')">工具展示</button>
       <button class="tab" onclick="filterTopics(this,'qa')">問答互動</button>
       <button class="tab" onclick="filterTopics(this,'case')">使用者故事</button>
+      <button class="tab" onclick="filterTopics(this,'stock')">📈 股票理財</button>
+      <button class="tab" onclick="filterTopics(this,'parenting')">👨‍👩‍👧 教養</button>
     </div>
     <div id="topics-list"></div>
   </div>
@@ -506,6 +508,21 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
           <button class="chip" onclick="selChip(this,'plat','ig')">Instagram</button>
           <button class="chip" onclick="selChip(this,'plat','fb')">Facebook</button>
           <button class="chip" onclick="selChip(this,'plat','all')">三平台同步</button>
+        </div>
+      </div>
+
+      <!-- 主題類型 -->
+      <div class="card">
+        <div class="card-title">主題類型</div>
+        <div class="chip-group" id="type-chips">
+          <button class="chip on" onclick="selChip(this,'type','food')">🍱 食物分析</button>
+          <button class="chip" onclick="selChip(this,'type','myth')">💡 飲食迷思</button>
+          <button class="chip" onclick="selChip(this,'type','science')">🔬 營養科學</button>
+          <button class="chip" onclick="selChip(this,'type','tool')">🤖 工具展示</button>
+          <button class="chip" onclick="selChip(this,'type','qa')">❓ 問答互動</button>
+          <button class="chip" onclick="selChip(this,'type','case')">👤 使用者故事</button>
+          <button class="chip" onclick="selChip(this,'type','stock')">📈 股票理財</button>
+          <button class="chip" onclick="selChip(this,'type','parenting')">👨‍👩‍👧 教養</button>
         </div>
       </div>
 
@@ -649,6 +666,8 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
           <button class="opt-btn" onclick="selOpt(this,'photoTopic','myth')"><span class="ob-title">💡 飲食迷思</span><span class="ob-sub">用圖片破解一個常見的飲食誤解</span></button>
           <button class="opt-btn" onclick="selOpt(this,'photoTopic','qa')"><span class="ob-title">❓ 問答互動</span><span class="ob-sub">以圖片當引子，拋出互動問題</span></button>
           <button class="opt-btn" onclick="selOpt(this,'photoTopic','vendor')"><span class="ob-title">🍽️ 版主留言</span><span class="ob-sub">讚美這道料理並帶入 AI 分析</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','stock')"><span class="ob-title">📈 股票理財</span><span class="ob-sub">從圖片場景延伸生活化理財觀察</span></button>
+          <button class="opt-btn" onclick="selOpt(this,'photoTopic','parenting')"><span class="ob-title">👨‍👩‍👧 教養</span><span class="ob-sub">從圖片場景延伸教養反思</span></button>
         </div>
       </div>
 
@@ -938,6 +957,8 @@ const TOPICS_DEF = {
   tool:{ name:'工具展示', icon:'🤖', col:'#F3E8FF', tc:'#4A1D96' },
   qa:{ name:'問答互動', icon:'❓', col:'#FFF0F0', tc:'#7F1D1D' },
   case:{ name:'使用者故事', icon:'👤', col:'#FDF4FF', tc:'#581C87' },
+  stock:{ name:'股票理財', icon:'📈', col:'#E0F2FE', tc:'#0C4A6E' },
+  parenting:{ name:'教養', icon:'👨‍👩‍👧', col:'#FCE7F3', tc:'#831843' },
 };
 
 const DOW = ['日','一','二','三','四','五','六'];
@@ -1065,6 +1086,8 @@ const PHOTO_TOPIC_PROMPT = {
   myth: '【主題方向：飲食迷思】以這張圖片為切入點，破解一個和這個食物或情境相關的常見飲食誤解，用具體數字說明真相。',
   qa: '【主題方向：問答互動】以這張圖片為引子，設計一個讓讀者很容易回答的互動問題，引發留言討論。',
   vendor: '【主題方向：版主留言】這是要貼在食物版主留言區的內容。先真誠讚美圖片中的料理（2句），再提供這道食物的大概營養估算，最後自然帶入 AI 飲食教練。',
+  stock: '【主題方向：股票理財】以這張圖片的生活場景為引子（例如：陪孩子練球、準備便當的花費），自然延伸出一個生活化的理財觀察或心法，語氣是分享真實感受，不報明牌、不做投資建議。',
+  parenting: '【主題方向：教養】以這張圖片的生活場景為引子，延伸出一段教養反思或陪伴心得，帶出「顧全家也要顧自己」的角度，語氣真誠、有畫面感。',
 };
 
 async function genPhotoPost(regen){
@@ -2119,11 +2142,13 @@ function topicToGen(id){
   const t = G.topics.find(x=>x.id===id);
   if(!t) return;
   go('gen');
+  switchGenMode('article');
   if(t.url) document.querySelector('.url-inp').value = t.url;
   document.getElementById('brief-txt').value = t.note||t.title;
-  // Set type
-  const typeBtn = document.querySelector(`#type-grid .opt-btn:nth-child(${Object.keys(TOPICS_DEF).indexOf(t.type)+1})`);
-  if(typeBtn) selOpt(typeBtn,'type',t.type);
+  // Set type chip
+  const chips = [...document.querySelectorAll('#type-chips .chip')];
+  const idx = Object.keys(TOPICS_DEF).indexOf(t.type);
+  if(idx>-1 && chips[idx]) selChip(chips[idx],'type',t.type);
   toast('主題已載入產生器 ✓');
 }
 
