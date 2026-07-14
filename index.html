@@ -404,6 +404,12 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   <button class="nav" onclick="go('hist')"><span class="nav-icon">◷</span>發文紀錄</button>
   <div class="sb-foot">
     <div style="margin-bottom:6px">
+      <button class="btn btn-sm btn-green" style="width:100%;justify-content:center;font-size:11px" onclick="connectFolder()">
+        📁 連結本機資料夾
+      </button>
+      <div id="folder-status" style="font-size:10px;color:var(--muted);text-align:center;margin-top:4px">尚未連結</div>
+    </div>
+    <div style="margin-bottom:6px">
       <button class="btn btn-sm btn-green" style="width:100%;justify-content:center;font-size:11px" onclick="driveSync()">
         <span id="drive-icon">☁</span> Google Drive 同步
       </button>
@@ -458,6 +464,9 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
   <div class="pg" id="p-topics">
     <div class="ph">主題庫</div>
     <div class="ps">儲存靈感文章，點擊直接送進行事曆或產生器</div>
+    <div class="info info-green" style="margin-bottom:14px">
+      🧠 進階功能：新增主題時如果有填「文章內容」，之後只要生成同分類的貼文，系統會自動抓最新 2 篇當風格範例給 AI 參考（只學語氣與結構，不會抄襲內容）。
+    </div>
 
     <div class="card">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -1010,6 +1019,7 @@ const G = {
   topics: JSON.parse(localStorage.getItem('topics_v1') || '[]'),
   panelDate: null,
   driveReady: false,
+  dirHandle: null,
 };
 
 // Init
@@ -1023,6 +1033,7 @@ const G = {
   updStats();
   renderCal();
   renderTopics();
+  tryReconnectFolder();
 })();
 
 // ═══════════════════════════════════════════════
@@ -1431,8 +1442,17 @@ function toggleRec(i){
 // ═══════════════════════════════════════════════
 //  PROMPT BUILDER
 // ═══════════════════════════════════════════════
+// 自動從主題庫抓同分類、有存內容的文章當風格參考（進階自動套用）
+function getStyleRefs(type, limit){
+  limit = limit || 2;
+  return (G.topics||[])
+    .filter(t => t.type === type && t.content && t.content.trim())
+    .slice(0, limit)
+    .map(t => ({ title: t.title, content: t.content.trim() }));
+}
+
 function buildPrompt(cfg){
-  const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved, img64 } = cfg;
+  const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved, img64, styleRefs } = cfg;
   const spec = PLAT_SPEC[plat] || PLAT_SPEC.threads;
   const imgNote = img64 ? `\n\n【圖片輸入】上方附有一張圖片，請先仔細分析圖片內容（如果是食物：估算熱量、蛋白質、脂肪、碳水；如果是截圖：理解文字內容）再根據分析結果產出貼文。` : '';
   const urlNote = urls.length ? `\n\n參考文章網址（請擷取文章核心論點，根據選定口氣和風格重新包裝，不要直接翻譯，要符合 OnePack 大叔語調）：\n${urls.join('\n')}` : '';
@@ -1440,6 +1460,13 @@ function buildPrompt(cfg){
   const briefNote = brief ? `\n\n補充說明：${brief}` : '';
   const rulesNote = rules ? `\n\n寫作規則（必須遵守）：\n${rules}` : '';
   const regenNote = regen ? '\n\n（⚠️ 請從完全不同的角度切入，不要和上一版重複）' : '';
+
+  // Style reference note — auto-pulled from 主題庫 same-category saved articles
+  let styleNote = '';
+  if(styleRefs && styleRefs.length){
+    const refBlock = styleRefs.map((r,i)=>`【範例 ${i+1}｜${r.title}】\n${r.content.slice(0,500)}`).join('\n\n');
+    styleNote = `\n\n【風格參考——這是同分類主題庫裡你之前存的文章，僅供參考語氣、結構、切入角度，絕對不可抄襲文字內容】\n${refBlock}`;
+  }
 
   // Product note
   let prodNote = '';
@@ -1473,7 +1500,7 @@ ${stylePrompt}
 
 ${combinedVoice}
 
-${GOAL_PROMPT[goal]}${imgNote}${urlNote}${artNote}${briefNote}${prodNote}${rulesNote}${regenNote}
+${GOAL_PROMPT[goal]}${imgNote}${urlNote}${artNote}${briefNote}${styleNote}${prodNote}${rulesNote}${regenNote}
 
 請直接輸出貼文本體，不要加任何前言或說明。`;
 }
@@ -1520,7 +1547,7 @@ async function genPost(regen){
 
   // For image mode, add description to brief
   const effectiveBrief = img64 && imgDesc ? imgDesc + (brief ? '\n' + brief : '') : brief;
-  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief:effectiveBrief, rules, maxW, regen, prodApproved, img64 };
+  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief:effectiveBrief, rules, maxW, regen, prodApproved, img64, styleRefs:getStyleRefs(G.type) };
 
   try{
     if(G.plat === 'all'){
@@ -1779,7 +1806,8 @@ async function genWeek(){
         style: data.style||'news', goal: data.goal||'acquire',
         urls: data.urls||[], article: data.article||'', brief: data.topic||'',
         rules: localStorage.getItem('writing_rules')||'',
-        maxW: PLAT_SPEC[data.plat||'threads'].chars, regen:false, prodApproved:[]
+        maxW: PLAT_SPEC[data.plat||'threads'].chars, regen:false, prodApproved:[],
+        styleRefs: getStyleRefs(data.type||'food')
       };
       const txt = await callAPI(buildPrompt(cfg));
       G.calData[key] = {...data, text:txt};
@@ -2008,7 +2036,7 @@ async function panelGen(){
     urls, article: data.article||'', brief: effectiveBrief,
     rules: localStorage.getItem('writing_rules')||'',
     maxW: {threads:220,ig:300,fb:450,all:300}[data.plat]||220,
-    regen: false, prodApproved, img64,
+    regen: false, prodApproved, img64, styleRefs: getStyleRefs(data.type||'food'),
   };
 
   const btn = document.getElementById('panel-gen-btn');
@@ -2069,6 +2097,7 @@ function renderTopics(){
     return `<div class="hist-card">
       <div class="hist-meta">
         <span class="tag" style="background:${td.col};color:${td.tc}">${td.icon} ${td.name}</span>
+        ${t.content ? '<span class="tag" style="background:#DCFCE7;color:#14532D">✓ 風格參考中</span>' : ''}
         <span style="font-size:11px;color:var(--hint);margin-left:auto">${t.date||''}</span>
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">${esc(t.title)}</div>
@@ -2104,6 +2133,11 @@ function openNewTopic(){
     <div style="margin-bottom:12px">
       <label class="field-label">備註 / 想強調的重點</label>
       <textarea id="nt-note" rows="3" placeholder="這篇的核心論點是？想帶哪個產品？有什麼特別要說的？"></textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">文章內容（可選——貼上全文或摘要，AI 生成同分類貼文時會自動參考其語氣風格）</label>
+      <textarea id="nt-content" rows="5" placeholder="貼上你喜歡的這篇文章內容，讓 AI 之後生成同類型貼文時參考語氣、結構（AI 不會照抄，只學風格）"></textarea>
+      <div style="font-size:11px;color:var(--hint);margin-top:4px">💡 有填內容的主題，之後生成同分類貼文時系統會自動抓最新 2 篇當風格範例</div>
     </div>`;
   document.getElementById('panel-foot').innerHTML = `
     <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveNewTopic()">+ 儲存主題</button>
@@ -2121,6 +2155,7 @@ function saveNewTopic(){
     type: document.getElementById('nt-type').value,
     url: document.getElementById('nt-url').value.trim(),
     note: document.getElementById('nt-note').value.trim(),
+    content: document.getElementById('nt-content').value.trim(),
     date: new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}),
   };
   G.topics.unshift(t);
@@ -2248,6 +2283,156 @@ function updProd(idx,key,val){ const list=loadProducts(); if(!list[idx])return; 
 function delProd(idx){ if(!confirm('確定刪除？'))return; const list=loadProducts(); list.splice(idx,1); saveProducts(list); renderProducts(); toast('已刪除 ✓'); }
 function addProduct(){ const list=loadProducts(); list.unshift({id:'c_'+Date.now(),name:'新產品',cat:'',key:'',claim:'',for:'',caution:''}); saveProducts(list); renderProducts(); toast('已新增 ✓'); }
 function exportProducts(){ const txt=JSON.stringify(loadProducts(),null,2); const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(txt); a.download='products.json'; a.click(); toast('已匯出 ✓'); }
+
+// ═══════════════════════════════════════════════
+//  本機資料夾同步（File System Access API）
+//  換電腦時：把資料夾整個複製過去，點「連結本機資料夾」選同一個
+//  資料夾即可載入所有資料，不需要任何雲端服務或 API key
+// ═══════════════════════════════════════════════
+const FOLDER_FILES = {
+  topics_v1: 'topics.json',
+  prod_kb: 'products.json',
+  hist_v2: 'history.json',
+  cal_v2: 'calendar.json',
+  stats_v2: 'stats.json',
+  writing_rules: 'writing_rules.txt',
+};
+let folderSyncTimer = null;
+let _suppressFolderSync = false;
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open('onepack_fs', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function idbSetHandle(handle){
+  const db = await idbOpen();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction('handles','readwrite');
+    tx.objectStore('handles').put(handle,'dir');
+    tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGetHandle(){
+  const db = await idbOpen();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction('handles','readonly');
+    const req = tx.objectStore('handles').get('dir');
+    req.onsuccess = () => res(req.result || null);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function updateFolderStatus(handle, connected){
+  const el = document.getElementById('folder-status');
+  if(!el) return;
+  el.style.color = '';
+  el.textContent = connected ? ('✓ 已連結：'+(handle?.name||'資料夾')) : '尚未連結';
+  el.style.color = connected ? 'var(--green)' : 'var(--muted)';
+}
+
+async function connectFolder(){
+  if(!window.showDirectoryPicker){
+    toast('此瀏覽器不支援資料夾同步，請用電腦版 Chrome 或 Edge');
+    return;
+  }
+  try{
+    const handle = await window.showDirectoryPicker();
+    G.dirHandle = handle;
+    await idbSetHandle(handle);
+    await loadFromFolder(handle, true);
+  }catch(e){
+    if(e.name !== 'AbortError') toast('連結資料夾失敗：'+e.message);
+  }
+}
+
+async function loadFromFolder(handle, isNewConnect){
+  let foundAny = false;
+  _suppressFolderSync = true;
+  for(const [key, fname] of Object.entries(FOLDER_FILES)){
+    try{
+      const fh = await handle.getFileHandle(fname);
+      const text = await (await fh.getFile()).text();
+      if(text && text.trim()){
+        localStorage.setItem(key, text);
+        foundAny = true;
+      }
+    }catch(e){ /* 檔案還不存在，略過 */ }
+  }
+  _suppressFolderSync = false;
+  updateFolderStatus(handle, true);
+  if(isNewConnect){
+    if(foundAny){
+      toast('已從資料夾載入資料，重新整理中...');
+      setTimeout(()=>location.reload(), 900);
+    } else {
+      toast('資料夾是空的，已建立初始檔案 ✓');
+      await syncToFolder();
+    }
+  }
+}
+
+async function syncToFolder(){
+  if(!G.dirHandle || _suppressFolderSync) return;
+  try{
+    const perm = await G.dirHandle.queryPermission({mode:'readwrite'});
+    if(perm !== 'granted') return;
+    for(const [key, fname] of Object.entries(FOLDER_FILES)){
+      const val = localStorage.getItem(key);
+      if(val === null) continue;
+      const fh = await G.dirHandle.getFileHandle(fname, {create:true});
+      const w = await fh.createWritable();
+      await w.write(val);
+      await w.close();
+    }
+  }catch(e){ console.warn('資料夾同步失敗', e); }
+}
+
+function queueFolderSync(){
+  if(!G.dirHandle) return;
+  clearTimeout(folderSyncTimer);
+  folderSyncTimer = setTimeout(syncToFolder, 600);
+}
+
+async function tryReconnectFolder(){
+  if(!window.showDirectoryPicker) return;
+  try{
+    const handle = await idbGetHandle();
+    if(!handle) return;
+    const perm = await handle.queryPermission({mode:'readwrite'});
+    if(perm === 'granted'){
+      G.dirHandle = handle;
+      updateFolderStatus(handle, true);
+    } else {
+      const el = document.getElementById('folder-status');
+      if(el) el.innerHTML = '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px" onclick="reauthFolder()">🔓 重新授權資料夾</button>';
+    }
+  }catch(e){ /* 忽略 */ }
+}
+async function reauthFolder(){
+  try{
+    const handle = await idbGetHandle();
+    if(!handle) return;
+    const perm = await handle.requestPermission({mode:'readwrite'});
+    if(perm === 'granted'){
+      G.dirHandle = handle;
+      await loadFromFolder(handle, false);
+      toast('已重新連結資料夾 ✓');
+    }
+  }catch(e){ toast('授權失敗：'+e.message); }
+}
+
+// 攔截 localStorage.setItem，資料一有變動就自動排入資料夾同步
+(function(){
+  const _origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value){
+    _origSet(key, value);
+    if(FOLDER_FILES[key] && !_suppressFolderSync) queueFolderSync();
+  };
+})();
 
 // ═══════════════════════════════════════════════
 //  GOOGLE DRIVE SYNC (export JSON to Drive)
