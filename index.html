@@ -465,7 +465,10 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--hint)
     <div class="ph">主題庫</div>
     <div class="ps">儲存靈感文章，點擊直接送進行事曆或產生器</div>
     <div class="info info-green" style="margin-bottom:14px">
-      🧠 進階功能：新增主題時如果有填「文章內容」，之後只要生成同分類的貼文，系統會自動抓最新 2 篇當風格範例給 AI 參考（只學語氣與結構，不會抄襲內容）。
+      🧠 進階功能：新增主題時可以貼上「文章內容」，並勾選「加入 AI 風格參考池」。之後生成同分類、同平台的貼文時，AI 會參考你勾選的文章，學習口氣、寫法、結構（不會照抄內容）。要不要用哪幾篇，完全由你自己勾選決定。
+    </div>
+    <div class="info info-blue" style="margin-bottom:14px">
+      💡 舊主題也可以事後點卡片上的「📝 加入文章內容」補上內容並勾選加入參考池。
     </div>
 
     <div class="card">
@@ -1442,11 +1445,21 @@ function toggleRec(i){
 // ═══════════════════════════════════════════════
 //  PROMPT BUILDER
 // ═══════════════════════════════════════════════
-// 自動從主題庫抓同分類、有存內容的文章當風格參考（進階自動套用）
-function getStyleRefs(type, limit){
-  limit = limit || 2;
+// 平台分組：Threads 一組，FB/IG 算同一組（三平台同步時兩組都拿）
+function platGroup(plat){
+  if(plat==='threads') return ['threads'];
+  if(plat==='fb' || plat==='ig') return ['fbig'];
+  if(plat==='all') return ['threads','fbig'];
+  return ['threads','fbig'];
+}
+
+// 只抓「你自己勾選」加入風格參考池的主題文章（同分類 + 平台相符），不再自動抓最新幾篇
+function getStyleRefs(type, plat, limit){
+  limit = limit || 6;
+  const groups = platGroup(plat);
   return (G.topics||[])
-    .filter(t => t.type === type && t.content && t.content.trim())
+    .filter(t => t.type === type && t.useRef && t.content && t.content.trim()
+      && (!t.refPlatform || t.refPlatform === 'both' || groups.includes(t.refPlatform)))
     .slice(0, limit)
     .map(t => ({ title: t.title, content: t.content.trim() }));
 }
@@ -1464,8 +1477,8 @@ function buildPrompt(cfg){
   // Style reference note — auto-pulled from 主題庫 same-category saved articles
   let styleNote = '';
   if(styleRefs && styleRefs.length){
-    const refBlock = styleRefs.map((r,i)=>`【範例 ${i+1}｜${r.title}】\n${r.content.slice(0,500)}`).join('\n\n');
-    styleNote = `\n\n【風格參考——這是同分類主題庫裡你之前存的文章，僅供參考語氣、結構、切入角度，絕對不可抄襲文字內容】\n${refBlock}`;
+    const refBlock = styleRefs.map((r,i)=>`【範例 ${i+1}｜${r.title}】\n${r.content.slice(0,800)}`).join('\n\n');
+    styleNote = `\n\n【風格參考——這些是你在主題庫中親自勾選、同分類且適用這個平台的文章，請仔細學習它們的「說話口氣」「用字遣詞」「段落結構／起承轉合」，並套用到這篇新貼文上，但絕對不可抄襲原文的具體句子或內容】\n${refBlock}`;
   }
 
   // Product note
@@ -1547,7 +1560,7 @@ async function genPost(regen){
 
   // For image mode, add description to brief
   const effectiveBrief = img64 && imgDesc ? imgDesc + (brief ? '\n' + brief : '') : brief;
-  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief:effectiveBrief, rules, maxW, regen, prodApproved, img64, styleRefs:getStyleRefs(G.type) };
+  const cfg = { plat:G.plat, type:G.type, tone:G.tone, style:G.style, goal:G.goal, urls, article, brief:effectiveBrief, rules, maxW, regen, prodApproved, img64, styleRefs:getStyleRefs(G.type, G.plat) };
 
   try{
     if(G.plat === 'all'){
@@ -1807,7 +1820,7 @@ async function genWeek(){
         urls: data.urls||[], article: data.article||'', brief: data.topic||'',
         rules: localStorage.getItem('writing_rules')||'',
         maxW: PLAT_SPEC[data.plat||'threads'].chars, regen:false, prodApproved:[],
-        styleRefs: getStyleRefs(data.type||'food')
+        styleRefs: getStyleRefs(data.type||'food', data.plat||'threads')
       };
       const txt = await callAPI(buildPrompt(cfg));
       G.calData[key] = {...data, text:txt};
@@ -2036,7 +2049,7 @@ async function panelGen(){
     urls, article: data.article||'', brief: effectiveBrief,
     rules: localStorage.getItem('writing_rules')||'',
     maxW: {threads:220,ig:300,fb:450,all:300}[data.plat]||220,
-    regen: false, prodApproved, img64, styleRefs: getStyleRefs(data.type||'food'),
+    regen: false, prodApproved, img64, styleRefs: getStyleRefs(data.type||'food', data.plat||'threads'),
   };
 
   const btn = document.getElementById('panel-gen-btn');
@@ -2094,22 +2107,94 @@ function renderTopics(){
   }
   el.innerHTML = list.map(t=>{
     const td = TOPICS_DEF[t.type]||TOPICS_DEF.food;
+    const platLabel = {threads:'Threads 專用',fbig:'FB/IG 專用',both:'Threads+FB/IG'}[t.refPlatform||'both'];
     return `<div class="hist-card">
       <div class="hist-meta">
         <span class="tag" style="background:${td.col};color:${td.tc}">${td.icon} ${td.name}</span>
-        ${t.content ? '<span class="tag" style="background:#DCFCE7;color:#14532D">✓ 風格參考中</span>' : ''}
+        ${t.content ? `<span class="tag" style="background:#F1F5F9;color:#334155">${esc(platLabel)}</span>` : ''}
+        ${t.useRef ? '<span class="tag" style="background:#DCFCE7;color:#14532D">✓ AI 風格參考中</span>' : ''}
         <span style="font-size:11px;color:var(--hint);margin-left:auto">${t.date||''}</span>
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">${esc(t.title)}</div>
       ${t.url?`<div style="font-size:11px;color:var(--green);margin-bottom:4px">🔗 ${esc(t.url)}</div>`:''}
       ${t.note?`<div style="font-size:12px;color:var(--muted);line-height:1.5">${esc(t.note)}</div>`:''}
+      ${t.content?`
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--rs)">
+        <input type="checkbox" ${t.useRef?'checked':''} onchange="toggleTopicRef('${t.id}',this.checked)" style="width:15px;height:15px">
+        <span style="font-size:12px;font-weight:600">加入 AI 風格參考池</span>
+        <select onchange="setTopicRefPlat('${t.id}',this.value)" onclick="event.stopPropagation()" style="margin-left:auto;font-size:11px;padding:3px 6px;width:auto">
+          <option value="both" ${(!t.refPlatform||t.refPlatform==='both')?'selected':''}>皆可</option>
+          <option value="threads" ${t.refPlatform==='threads'?'selected':''}>Threads</option>
+          <option value="fbig" ${t.refPlatform==='fbig'?'selected':''}>FB/IG</option>
+        </select>
+      </label>`:''}
       <div class="brow" style="margin-top:8px">
         <button class="btn btn-green btn-sm" onclick="topicToGen('${t.id}')">✦ 送進產生器</button>
         <button class="btn btn-sm" onclick="topicToCal('${t.id}')">📅 放入行事曆</button>
+        <button class="btn btn-sm" onclick="editTopicContent('${t.id}')">📝 ${t.content?'編輯內容':'+ 加入文章內容'}</button>
         <button class="btn btn-sm" style="color:var(--red)" onclick="delTopic('${t.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleTopicRef(id, checked){
+  const t = G.topics.find(x=>x.id===id);
+  if(!t) return;
+  if(checked && !t.content){ toast('請先幫這篇加入文章內容才能勾選'); renderTopics(); return; }
+  t.useRef = checked;
+  localStorage.setItem('topics_v1', JSON.stringify(G.topics));
+  renderTopics();
+  toast(checked?'已加入 AI 風格參考池 ✓':'已移出風格參考池');
+}
+function setTopicRefPlat(id, val){
+  const t = G.topics.find(x=>x.id===id);
+  if(!t) return;
+  t.refPlatform = val;
+  localStorage.setItem('topics_v1', JSON.stringify(G.topics));
+  toast('已更新適用平台 ✓');
+}
+function editTopicContent(id){
+  const t = G.topics.find(x=>x.id===id);
+  if(!t) return;
+  G.panelDate = null;
+  document.getElementById('panel-title').textContent = '編輯文章內容 — '+t.title;
+  document.getElementById('panel-body').innerHTML = `
+    <div style="margin-bottom:12px">
+      <label class="field-label">文章內容（貼上全文或摘要，供 AI 學習語氣/寫法/結構）</label>
+      <textarea id="et-content" rows="8" placeholder="貼上文章內容...">${esc(t.content||'')}</textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">這篇文章適用平台</label>
+      <select id="et-refplat">
+        <option value="both" ${(!t.refPlatform||t.refPlatform==='both')?'selected':''}>皆可（Threads + FB/IG 都適用）</option>
+        <option value="threads" ${t.refPlatform==='threads'?'selected':''}>Threads 專用</option>
+        <option value="fbig" ${t.refPlatform==='fbig'?'selected':''}>FB / IG 專用</option>
+      </select>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="et-useref" ${t.useRef?'checked':''} style="width:15px;height:15px">
+      <span style="font-size:13px;font-weight:600">✓ 加入 AI 風格參考池</span>
+    </label>`;
+  document.getElementById('panel-foot').innerHTML = `
+    <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveTopicContent('${id}')">儲存</button>
+    <button class="btn" onclick="closePanel()">取消</button>`;
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+function saveTopicContent(id){
+  const t = G.topics.find(x=>x.id===id);
+  if(!t) return;
+  const content = document.getElementById('et-content').value.trim();
+  const useRef = document.getElementById('et-useref').checked;
+  if(useRef && !content){ toast('要加入風格參考池，請先填「文章內容」'); return; }
+  t.content = content;
+  t.refPlatform = document.getElementById('et-refplat').value;
+  t.useRef = useRef;
+  localStorage.setItem('topics_v1', JSON.stringify(G.topics));
+  renderTopics();
+  closePanel();
+  toast('已儲存 ✓');
 }
 
 function openNewTopic(){
@@ -2137,7 +2222,21 @@ function openNewTopic(){
     <div style="margin-bottom:12px">
       <label class="field-label">文章內容（可選——貼上全文或摘要，AI 生成同分類貼文時會自動參考其語氣風格）</label>
       <textarea id="nt-content" rows="5" placeholder="貼上你喜歡的這篇文章內容，讓 AI 之後生成同類型貼文時參考語氣、結構（AI 不會照抄，只學風格）"></textarea>
-      <div style="font-size:11px;color:var(--hint);margin-top:4px">💡 有填內容的主題，之後生成同分類貼文時系統會自動抓最新 2 篇當風格範例</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="field-label">這篇文章適用平台（風格參考時比對用）</label>
+      <select id="nt-refplat">
+        <option value="both">皆可（Threads + FB/IG 都適用）</option>
+        <option value="threads">Threads 專用</option>
+        <option value="fbig">FB / IG 專用</option>
+      </select>
+    </div>
+    <div style="margin-bottom:4px;padding:10px 12px;background:var(--bg);border-radius:var(--rs);border:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="nt-useref" style="width:15px;height:15px">
+        <span style="font-size:13px;font-weight:600">✓ 加入 AI 風格參考池</span>
+      </label>
+      <div style="font-size:11px;color:var(--hint);margin-top:4px;padding-left:23px">勾選後，這篇文章的口氣、寫法、結構會在你生成同分類貼文時被 AI 學習參考（需同時填「文章內容」才有效）</div>
     </div>`;
   document.getElementById('panel-foot').innerHTML = `
     <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveNewTopic()">+ 儲存主題</button>
@@ -2149,13 +2248,18 @@ function openNewTopic(){
 function saveNewTopic(){
   const title = document.getElementById('nt-title').value.trim();
   if(!title){ toast('請輸入主題標題'); return; }
+  const content = document.getElementById('nt-content').value.trim();
+  const useRef = document.getElementById('nt-useref').checked;
+  if(useRef && !content){ toast('要加入風格參考池，請先填「文章內容」'); return; }
   const t = {
     id: 'tp_'+Date.now(),
     title,
     type: document.getElementById('nt-type').value,
     url: document.getElementById('nt-url').value.trim(),
     note: document.getElementById('nt-note').value.trim(),
-    content: document.getElementById('nt-content').value.trim(),
+    content,
+    refPlatform: document.getElementById('nt-refplat').value,
+    useRef,
     date: new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}),
   };
   G.topics.unshift(t);
