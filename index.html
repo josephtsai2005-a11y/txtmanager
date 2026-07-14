@@ -1147,8 +1147,8 @@ ${imgNote}${regenNote}
       document.getElementById('otxt-th').textContent='分析中...';
       document.getElementById('otxt-fb').textContent='等待中...';
       const [txtTh, txtFb] = await Promise.all([
-        callAPI(buildPhotoPrompt('threads'), G.img64),
-        callAPI(buildPhotoPrompt('fb'), G.img64),
+        callAPI(buildPhotoPrompt('threads'), G.img64, G.imgMime),
+        callAPI(buildPhotoPrompt('fb'), G.img64, G.imgMime),
       ]);
       G.outs={threads:txtTh, fb:txtFb};
       document.getElementById('otxt-th').textContent=txtTh;
@@ -1160,7 +1160,7 @@ ${imgNote}${regenNote}
       document.getElementById('out-single').style.display='block';
       document.getElementById('out-triple').style.display='none';
       document.getElementById('out-txt').textContent='分析圖片中...';
-      const txt = await callAPI(buildPhotoPrompt(plat), G.img64);
+      const txt = await callAPI(buildPhotoPrompt(plat), G.img64, G.imgMime);
       G.curOut=txt; G.curMode='photo';
       document.getElementById('out-txt').textContent=txt;
       document.getElementById('out-wc').textContent=[...txt].length+'字';
@@ -1225,6 +1225,7 @@ function pLoadImg(file){
   const reader = new FileReader();
   reader.onload = ev => {
     G.panelImg64 = ev.target.result.split(',')[1];
+    G.panelImgMime = (file && file.type) || (ev.target.result.match(/^data:([^;]+);/)||[])[1] || 'image/jpeg';
     const preview = document.getElementById('p-img-preview');
     if(preview){ preview.src = ev.target.result; preview.style.display='block'; }
     const ph = document.getElementById('p-img-ph');
@@ -1238,6 +1239,7 @@ function pLoadImg(file){
 }
 function pClearImg(){
   G.panelImg64 = null;
+  G.panelImgMime = null;
   const preview = document.getElementById('p-img-preview');
   if(preview){ preview.style.display='none'; preview.src=''; }
   const ph = document.getElementById('p-img-ph');
@@ -1347,6 +1349,7 @@ function loadImg(file){
   const reader = new FileReader();
   reader.onload = ev => {
     G.img64 = ev.target.result.split(',')[1];
+    G.imgMime = (file && file.type) || (ev.target.result.match(/^data:([^;]+);/)||[])[1] || 'image/jpeg';
     const preview = document.getElementById('img-preview');
     preview.src = ev.target.result;
     preview.style.display = 'block';
@@ -1360,6 +1363,7 @@ function loadImg(file){
 
 function clearImg(){
   G.img64 = null;
+  G.imgMime = null;
   const preview = document.getElementById('img-preview');
   if(preview){ preview.style.display='none'; preview.src=''; }
   const ph = document.getElementById('img-placeholder');
@@ -1521,11 +1525,23 @@ ${GOAL_PROMPT[goal]}${imgNote}${urlNote}${artNote}${briefNote}${styleNote}${prod
 // ═══════════════════════════════════════════════
 //  API CALL
 // ═══════════════════════════════════════════════
-async function callAPI(prompt, img64){
+const SUPPORTED_IMG_TYPES = ['image/jpeg','image/png','image/gif','image/webp'];
+function normalizeImgMime(mime){
+  if(SUPPORTED_IMG_TYPES.includes(mime)) return mime;
+  // 常見別名容錯（例如某些瀏覽器回報 image/jpg）
+  if(mime === 'image/jpg') return 'image/jpeg';
+  return null; // 不支援的格式（例如 iPhone 的 image/heic）
+}
+async function callAPI(prompt, img64, imgMime){
   if(!G.apiKey) throw new Error('no_key');
-  const msgs = img64
-    ? [{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img64}},{type:'text',text:prompt}]}]
-    : [{role:'user',content:prompt}];
+  let msgs;
+  if(img64){
+    const mime = normalizeImgMime(imgMime || 'image/jpeg');
+    if(!mime) throw new Error('圖片格式不支援（偵測到 '+(imgMime||'未知格式')+'），請改上傳 JPG / PNG / WEBP / GIF');
+    msgs = [{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:img64}},{type:'text',text:prompt}]}];
+  } else {
+    msgs = [{role:'user',content:prompt}];
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':G.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -1571,8 +1587,8 @@ async function genPost(regen){
       // Parallel generation for Threads + FB (IG syncs with FB)
       // Note: image only sent to first call to avoid duplication; prompt describes it for fb
       const [txtTh, txtFb] = await Promise.all([
-        callAPI(buildPrompt({...cfg, plat:'threads', maxW:220}), img64),
-        callAPI(buildPrompt({...cfg, plat:'fb', maxW:450}), img64),
+        callAPI(buildPrompt({...cfg, plat:'threads', maxW:220}), img64, G.imgMime),
+        callAPI(buildPrompt({...cfg, plat:'fb', maxW:450}), img64, G.imgMime),
       ]);
       G.outs = { threads:txtTh, fb:txtFb };
 
@@ -1586,7 +1602,7 @@ async function genPost(regen){
       document.getElementById('out-single').style.display = 'block';
       document.getElementById('out-triple').style.display = 'none';
       document.getElementById('out-txt').textContent = '生成中...';
-      const txt = await callAPI(buildPrompt(cfg), img64);
+      const txt = await callAPI(buildPrompt(cfg), img64, G.imgMime);
       G.curOut = txt;
       document.getElementById('out-txt').textContent = txt;
       const wc = [...txt].length;
@@ -1841,6 +1857,7 @@ async function genWeek(){
 function openPanel(dateKey){
   G.panelDate = dateKey;
   G.panelImg64 = null; // reset image for this panel session
+  G.panelImgMime = null;
   const data = G.calData[dateKey] || {};
   const d = new Date(dateKey);
   document.getElementById('panel-title').textContent = `${d.getMonth()+1}/${d.getDate()}（週${DOW[d.getDay()]}）設定`;
@@ -1991,6 +2008,7 @@ function openPanel(dateKey){
   // 初始化 img tab 狀態
   if(data.img64){
     G.panelImg64 = data.img64;
+    G.panelImgMime = data.img64Mime || 'image/jpeg';
     pSelSrc(document.getElementById('p-src-img'), 'img');
   }
 
@@ -2019,6 +2037,7 @@ function panelSave(){
     brief: document.getElementById('p-brief')?.value.trim() || '',
     imgDesc: document.getElementById('p-img-desc')?.value.trim() || '',
     img64: G.panelImg64 || existing.img64 || null,
+    img64Mime: G.panelImgMime || existing.img64Mime || null,
     plat: document.getElementById('p-plat')?.value || 'threads',
     type: existing.type || 'food',
     tone: document.getElementById('p-tone')?.value || 'uncle',
@@ -2037,6 +2056,7 @@ async function panelGen(){
   const data = G.calData[G.panelDate];
   const urls = data.url ? [data.url] : [];
   const img64 = G.panelImg64 || data.img64 || null;
+  const imgMime = G.panelImgMime || data.img64Mime || null;
   const brief = (document.getElementById('p-brief')?.value || data.brief || data.topic || '').trim();
   const imgDesc = (document.getElementById('p-img-desc')?.value || data.imgDesc || '').trim();
   const effectiveBrief = img64 && imgDesc ? imgDesc + (brief ? '\n'+brief : '') : brief;
@@ -2058,15 +2078,15 @@ async function panelGen(){
   try{
     if(data.plat==='all'){
       const [txtTh, txtFb] = await Promise.all([
-        callAPI(buildPrompt({...cfg,plat:'threads',maxW:220}), img64),
-        callAPI(buildPrompt({...cfg,plat:'fb',maxW:450}), img64),
+        callAPI(buildPrompt({...cfg,plat:'threads',maxW:220}), img64, imgMime),
+        callAPI(buildPrompt({...cfg,plat:'fb',maxW:450}), img64, imgMime),
       ]);
       G.calData[G.panelDate].text = txtTh;
       G.calData[G.panelDate].text_fb = txtFb;
       G.calData[G.panelDate].text_all = `【Threads】\n${txtTh}\n\n【FB+IG】\n${txtFb}`;
       G.stats.total+=2; G.stats.threads++; G.stats.fb++;
     } else {
-      const txt = await callAPI(buildPrompt(cfg), img64);
+      const txt = await callAPI(buildPrompt(cfg), img64, imgMime);
       G.calData[G.panelDate].text = txt;
       G.stats.total++; G.stats[data.plat==='fb'?'fb':'threads']++;
     }
