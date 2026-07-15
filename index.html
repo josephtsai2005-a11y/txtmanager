@@ -1471,7 +1471,9 @@ function getStyleRefs(type, plat, limit){
 function buildPrompt(cfg){
   const { plat, type, tone, style, goal, urls, article, brief, rules, maxW, regen, prodApproved, img64, styleRefs } = cfg;
   const spec = PLAT_SPEC[plat] || PLAT_SPEC.threads;
-  const imgNote = img64 ? `\n\n【圖片輸入】上方附有一張圖片，請先仔細分析圖片內容（如果是食物：估算熱量、蛋白質、脂肪、碳水；如果是截圖：理解文字內容）再根據分析結果產出貼文。` : '';
+  const imgNote = img64
+    ? `\n\n【圖片輸入】上方附有一張圖片，請先仔細分析圖片內容。\n${PHOTO_TOPIC_PROMPT[type] || '請先理解圖片內容（如果是食物：估算熱量、蛋白質、脂肪、碳水；如果是截圖：理解文字內容），再根據分析結果產出貼文。'}`
+    : '';
   const urlNote = urls.length ? `\n\n參考文章網址（請擷取文章核心論點，根據選定口氣和風格重新包裝，不要直接翻譯，要符合 OnePack 大叔語調）：\n${urls.join('\n')}` : '';
   const artNote = article ? `\n\n參考文章原文（根據這篇的核心論點，用選定口氣和風格改寫成社群貼文）：\n───\n${article}\n───` : '';
   const briefNote = brief ? `\n\n補充說明：${brief}` : '';
@@ -1914,8 +1916,14 @@ function openPanel(dateKey){
       <textarea id="p-brief" rows="2" placeholder="想強調的重點、給 AI 的補充指示...">${esc(data.brief||'')}</textarea>
     </div>
 
-    <!-- 平台、口氣、風格、目標 -->
+    <!-- 主題類型、平台 -->
     <div class="g2" style="margin-bottom:10px">
+      <div>
+        <label class="field-label">主題類型</label>
+        <select id="p-type">
+          ${Object.entries(TOPICS_DEF).map(([k,v])=>`<option value="${k}" ${(data.type||'food')===k?'selected':''}>${v.icon} ${v.name}</option>`).join('')}
+        </select>
+      </div>
       <div>
         <label class="field-label">平台</label>
         <select id="p-plat">
@@ -1925,6 +1933,8 @@ function openPanel(dateKey){
           <option value="all" ${data.plat==='all'?'selected':''}>三平台同步</option>
         </select>
       </div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
       <div>
         <label class="field-label">發文目標</label>
         <select id="p-goal">
@@ -1934,6 +1944,7 @@ function openPanel(dateKey){
           <option value="vendor" ${data.goal==='vendor'?'selected':''}>🍱 版主留言</option>
         </select>
       </div>
+      <div></div>
     </div>
     <div class="g2" style="margin-bottom:10px">
       <div>
@@ -2039,7 +2050,7 @@ function panelSave(){
     img64: G.panelImg64 || existing.img64 || null,
     img64Mime: G.panelImgMime || existing.img64Mime || null,
     plat: document.getElementById('p-plat')?.value || 'threads',
-    type: existing.type || 'food',
+    type: document.getElementById('p-type')?.value || existing.type || 'food',
     tone: document.getElementById('p-tone')?.value || 'uncle',
     style: document.getElementById('p-style')?.value || 'news',
     goal: document.getElementById('p-goal')?.value || 'acquire',
